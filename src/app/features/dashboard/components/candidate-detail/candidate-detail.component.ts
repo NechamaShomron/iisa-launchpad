@@ -1,4 +1,5 @@
 import { Component, OnInit, OnChanges, Input, Output, EventEmitter, ChangeDetectorRef } from '@angular/core';
+import { Router } from '@angular/router';
 import { CommonModule, Location, DatePipe } from '@angular/common';
 import { Candidate } from '../../../../models/candidate.model';
 import { CandidateService } from '../../../../services/candidate.service';
@@ -27,6 +28,7 @@ export class CandidateDetailComponent implements OnInit, OnChanges {
   constructor(
     public candidateService: CandidateService,
     public location: Location,
+    private router: Router,
     private dialog: MatDialog,
     private cdr: ChangeDetectorRef
   ) {}
@@ -91,9 +93,10 @@ export class CandidateDetailComponent implements OnInit, OnChanges {
         return;
       }
       
-      // Set edit state scoped to this browser tab only
+      // Set edit state scoped to this browser tab only (fallback)
       sessionStorage.setItem('editCandidateId', this.candidate.id);
-      window.location.href = '/';
+      // Navigate to registration with explicit query param to avoid cross-tab leakage
+      this.router.navigate(['/'], { queryParams: { editId: this.candidate.id } });
     }
   }
 

@@ -1,4 +1,5 @@
 import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
+import { ActivatedRoute } from '@angular/router';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule, AbstractControl, ValidationErrors } from '@angular/forms';
 import { CandidateService } from '../../../../services/candidate.service';
 import { Candidate } from '../../../../models/candidate.model';
@@ -68,7 +69,8 @@ export class RegistrationFormComponent implements OnInit {
     private fb: FormBuilder,
     private candidateService: CandidateService,
     private snackBar: MatSnackBar,
-    private cdr: ChangeDetectorRef
+    private cdr: ChangeDetectorRef,
+    private route: ActivatedRoute
   ) {
     this.registrationForm = this.fb.group({
       fullName: ['', [Validators.required, Validators.minLength(2)]],
@@ -95,6 +97,11 @@ export class RegistrationFormComponent implements OnInit {
     
     // Clear edit state if user navigates directly to registration (not from edit)
     // This prevents conflicts if multiple users are registering simultaneously
+    // Prefer query param for per-tab, per-navigation scoping
+    const qpEditId = this.route.snapshot.queryParamMap.get('editId');
+    if (qpEditId) {
+      sessionStorage.setItem('editCandidateId', qpEditId);
+    }
     const editCandidateId = sessionStorage.getItem('editCandidateId');
     if (!editCandidateId) {
       // No edit state - this is a fresh registration
