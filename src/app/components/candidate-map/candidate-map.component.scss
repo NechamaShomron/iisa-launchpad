@@ -1,0 +1,109 @@
+.map-container {
+  border-radius: 12px;
+  overflow: hidden;
+  height: 100%;
+  width: 100%;
+  min-height: 180px;
+  display: flex;
+  flex-direction: column;
+  padding: 0 !important;
+  margin: 0 !important;
+  box-sizing: border-box;
+}
+
+.map-header {
+  border-bottom: 1px solid #e5e7eb;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 12px;
+  flex-shrink: 0;
+}
+
+.map-header .header-icon {
+  color: #1e3a5f;
+  font-size: 24px !important;
+  width: 24px !important;
+  height: 24px !important;
+}
+
+.map-header .header-title {
+  margin: 0;
+  font-family: 'Roboto', 'Segoe UI', 'Helvetica Neue', Arial, sans-serif !important;
+  font-size: 22px !important;      /* larger for map */
+  line-height: 1.2 !important;     /* consistent rhythm */
+  letter-spacing: normal;
+  color: #111827;       /* black */
+}
+
+.candidate-map {
+  width: 100%;
+  height: 100%;
+  flex: 1;
+  min-height: 100px;
+  padding: 0 !important;
+  margin: 0 !important;
+}
+
+::ng-deep #candidateMap {
+  width: 100% !important;
+  height: 100% !important;
+  padding: 0 !important;
+  margin: 0 !important;
+}
+
+::ng-deep .custom-marker {
+  background: none;
+  border: none;
+}
+
+::ng-deep .marker-content {
+  background: linear-gradient(135deg, #3b82f6, #2563eb);
+  color: white;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  font-size: 12px;
+  border: 2px solid white;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+::ng-deep .marker-content:hover {
+  transform: scale(1.1);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+}
+
+::ng-deep .city-popup {
+  min-width: 200px;
+}
+
+::ng-deep .city-popup h3 {
+  margin: 0 0 8px 0;
+  color: #1e3a5f;
+  font-size: 16px;
+}
+
+::ng-deep .city-popup p {
+  margin: 0 0 8px 0;
+  color: #666;
+  font-size: 14px;
+}
+
+::ng-deep .city-popup ul {
+  margin: 0;
+  padding-left: 20px;
+  list-style: disc;
+}
+
+::ng-deep .city-popup li {
+  margin: 4px 0;
+  color: #333;
+  font-size: 13px;
+}
+

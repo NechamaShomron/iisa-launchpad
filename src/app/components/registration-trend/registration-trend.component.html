@@ -1,0 +1,36 @@
+<div class="trend-card">
+  <div class="trend-title">Registration Trends</div>
+  <svg [attr.viewBox]="'0 0 ' + width + ' ' + height" class="trend-svg">
+    <!-- Area -->
+    <path [attr.d]="areaD" class="area" />
+    <!-- Line -->
+    <path [attr.d]="pathD" class="line" />
+
+    <!-- Points -->
+    <ng-container *ngIf="values.length > 0">
+      <ng-container *ngFor="let v of values; let i = index">
+        <circle
+          class="point"
+          [attr.cx]="(padding.left + (width - padding.left - padding.right) / (values.length - 1 || 1) * i)"
+          [attr.cy]="(padding.top + (1 - v / Math.max(1, ...values)) * (height - padding.top - padding.bottom))"
+          r="3"
+        />
+      </ng-container>
+    </ng-container>
+
+    <!-- X labels -->
+    <ng-container *ngFor="let lbl of labels; let i = index">
+      <text class="x-label"
+            [attr.x]="(padding.left + (width - padding.left - padding.right) / (values.length - 1 || 1) * i)"
+            [attr.y]="height - 6" text-anchor="middle">{{ lbl }}</text>
+    </ng-container>
+
+    <!-- Y grid -->
+    <ng-container *ngFor="let t of yTicks; let i = index">
+      <line class="grid" [attr.x1]="padding.left" [attr.x2]="width - padding.right"
+            [attr.y1]="padding.top + (1 - t / yTicks[yTicks.length-1]) * (height - padding.top - padding.bottom)"
+            [attr.y2]="padding.top + (1 - t / yTicks[yTicks.length-1]) * (height - padding.top - padding.bottom)" />
+      <text class="y-label" [attr.x]="8" [attr.y]="padding.top + (1 - t / yTicks[yTicks.length-1]) * (height - padding.top - padding.bottom) + 4">{{ t }}</text>
+    </ng-container>
+  </svg>
+</div>

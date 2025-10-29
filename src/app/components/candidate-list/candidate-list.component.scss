@@ -1,0 +1,41 @@
+// Limit to 2 rows with scroll on all screen sizes
+.candidate-list-container {
+  overflow-y: auto;
+  overflow-x: hidden;
+  -webkit-overflow-scrolling: touch;
+  padding-bottom: 24px; // Add padding under the scroll
+  
+  // Mobile: 1 column, show 2 rows (2 cards)
+  @media (max-width: 767px) {
+    max-height: 445px; 
+  }
+  
+  // Tablet: 2 columns, show 2 rows (4 cards)
+  @media (min-width: 768px) and (max-width: 1023px) {
+    max-height: 450px; // Approximately 4 cards in 2 rows (each ~250px + gap)
+  }
+  
+  // Desktop: 3 columns, show 2 rows (6 cards)
+  @media (min-width: 1024px) {
+    max-height: 560px; // Approximately 6 cards in 2 rows (each ~250px + gap)
+  }
+  
+  // Custom scrollbar styling
+  &::-webkit-scrollbar {
+    width: 6px;
+  }
+  
+  &::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 3px;
+  }
+  
+  &::-webkit-scrollbar-thumb {
+    background: #888;
+    border-radius: 3px;
+    
+    &:hover {
+      background: #555;
+    }
+  }
+}
