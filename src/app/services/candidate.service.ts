@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { BehaviorSubject, Observable, Subject } from 'rxjs';
-import { Database, ref, onValue, set, update, remove, get, push } from '@angular/fire/database';
+import { Database, ref, onValue, set, update, remove, get, push, runTransaction } from '@angular/fire/database';
 import { Candidate, VisitStats } from '../models/candidate.model';
 
 @Injectable({
@@ -54,8 +54,17 @@ export class CandidateService {
     // Listen to visits count
     const visitsRef = ref(this.db, this.visitsPath);
     onValue(visitsRef, (snapshot) => {
-      const count = snapshot.val() || 0;
-      this.visitsSubject.next(count);
+      const count = snapshot.val();
+      // If visits node doesn't exist yet, initialize it to 0
+      if (count === null || count === undefined) {
+        set(visitsRef, 0).catch(err => console.error('Error initializing visits:', err));
+        this.visitsSubject.next(0);
+      } else {
+        this.visitsSubject.next(count);
+      }
+    }, (error) => {
+      console.error('Error listening to visits:', error);
+      this.visitsSubject.next(0);
     });
   }
 
@@ -107,6 +116,12 @@ export class CandidateService {
     try {
       if (!candidate.id) {
         throw new Error('Candidate ID is required for update');
+      }
+
+      // Verify candidate exists before updating (handles concurrent deletion)
+      const existingCandidate = this.getCandidateById(candidate.id);
+      if (!existingCandidate) {
+        throw new Error(`Candidate with ID ${candidate.id} no longer exists`);
       }
 
       const updateData = {
@@ -189,15 +204,27 @@ export class CandidateService {
   private async incrementVisit(): Promise<void> {
     try {
       const visitsRef = ref(this.db, this.visitsPath);
+      
+      // Read current value
       const snapshot = await get(visitsRef);
-      const currentCount = snapshot.val() || 0;
-      await set(visitsRef, currentCount + 1);
+      const currentCount = snapshot.val();
+      
+      // Increment and save
+      const newCount = (currentCount || 0) + 1;
+      await set(visitsRef, newCount);
+      
+      console.log('Visit count incremented from', currentCount || 0, 'to', newCount);
+      
+      // The listener will automatically update visitsSubject, but force update to ensure UI updates
+      this.visitsSubject.next(newCount);
     } catch (error) {
       console.error('Error incrementing visit count:', error);
-      // Fallback to localStorage if Firebase fails
+      // Fallback: localStorage (but this won't sync across devices)
       const visitsKey = 'iisa_visits';
       const current = parseInt(localStorage.getItem(visitsKey) || '0');
-      localStorage.setItem(visitsKey, (current + 1).toString());
+      const newLocalCount = current + 1;
+      localStorage.setItem(visitsKey, newLocalCount.toString());
+      this.visitsSubject.next(newLocalCount);
     }
   }
 }

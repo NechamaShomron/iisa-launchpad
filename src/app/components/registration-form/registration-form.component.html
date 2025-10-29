@@ -11,9 +11,14 @@
   <div class="meteor meteor-4"></div>
   <div class="meteor meteor-5"></div>
 
-  <div class="w-full">
-    <mat-card class="form-card">
-      <div class="form-content">
+  @if (isLoading) {
+    <div class="flex justify-center items-center min-h-[500px] w-full">
+      <mat-spinner diameter="60" strokeWidth="5" color="primary"></mat-spinner>
+    </div>
+  } @else {
+    <div class="w-full">
+      <mat-card class="form-card">
+        <div class="form-content">
         <h2 class="form-title">
           {{ editingCandidate ? 'Update Your Registration' : 'Space Flight Registration' }}
         </h2>
@@ -191,4 +196,5 @@
       </div>
     </mat-card>
   </div>
+  }
 </div>

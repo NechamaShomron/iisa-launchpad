@@ -16,7 +16,7 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 8px 12px;
+  padding: 16px 16px 8px 16px; // Slightly reduced top padding to nudge title up
   flex-shrink: 0;
 }
 

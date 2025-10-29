@@ -1,4 +1,4 @@
-import { Component, OnInit, OnChanges, Input, Output, EventEmitter } from '@angular/core';
+import { Component, OnInit, OnChanges, Input, Output, EventEmitter, ChangeDetectorRef } from '@angular/core';
 import { CommonModule, Location, DatePipe } from '@angular/common';
 import { Candidate } from '../../models/candidate.model';
 import { CandidateService } from '../../services/candidate.service';
@@ -6,11 +6,12 @@ import { MatCardModule } from '@angular/material/card';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 
 @Component({
   selector: 'app-candidate-detail',
   standalone: true,
-  imports: [CommonModule, MatCardModule, MatButtonModule, MatIconModule, MatDialogModule],
+  imports: [CommonModule, MatCardModule, MatButtonModule, MatIconModule, MatDialogModule, MatProgressSpinnerModule],
   templateUrl: './candidate-detail.component.html',
   styleUrl: './candidate-detail.component.scss'
 })
@@ -21,16 +22,37 @@ export class CandidateDetailComponent implements OnInit, OnChanges {
   @Output() goBack = new EventEmitter<void>();
   previousCandidate?: Candidate;
   nextCandidate?: Candidate;
+  isLoading: boolean = true;
 
   constructor(
     public candidateService: CandidateService,
     public location: Location,
-    private dialog: MatDialog
+    private dialog: MatDialog,
+    private cdr: ChangeDetectorRef
   ) {}
 
   ngOnInit(): void {
     if (this.candidate) {
-      this.loadNavigationCandidates();
+      this.isLoading = true;
+      this.cdr.detectChanges(); // Force change detection to show spinner
+      
+      // Add a small delay to ensure spinner is visible
+      const startTime = Date.now();
+      const minLoadTime = 400;
+      
+      setTimeout(() => {
+        this.loadNavigationCandidates();
+        const elapsed = Date.now() - startTime;
+        const remainingTime = Math.max(0, minLoadTime - elapsed);
+        
+        setTimeout(() => {
+          this.isLoading = false;
+          this.cdr.detectChanges();
+        }, remainingTime);
+      }, 50);
+    } else {
+      this.isLoading = true;
+      this.cdr.detectChanges();
     }
   }
 
@@ -62,6 +84,14 @@ export class CandidateDetailComponent implements OnInit, OnChanges {
 
   editCandidate(): void {
     if (this.candidate && this.isEditable()) {
+      // Verify candidate still exists before navigating to edit (handles concurrent deletion)
+      const currentCandidate = this.candidateService.getCandidateById(this.candidate.id);
+      if (!currentCandidate) {
+        console.error('Candidate no longer exists');
+        return;
+      }
+      
+      // Set edit state - this will be checked in registration form
       localStorage.setItem('editCandidateId', this.candidate.id);
       window.location.href = '/';
     }
@@ -87,7 +117,10 @@ export class CandidateDetailComponent implements OnInit, OnChanges {
   ngOnChanges(): void {
     // Reload navigation when candidate or availableCandidates changes
     if (this.candidate) {
+      this.isLoading = false;
       this.loadNavigationCandidates();
+    } else {
+      this.isLoading = true;
     }
   }
 

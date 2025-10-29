@@ -281,7 +281,8 @@
   width: 100%;
   max-width: 420px;
   height: -webkit-fill-available;
-  margin-left: -30px; // Shift left to center better accounting for labels
+  margin: 0 auto; // Center the SVG
+  display: block;
 }
 
 .age-bar-svg .grid {
@@ -407,6 +408,9 @@
   background: #f3f4f6;
   border-radius: 12px;
   padding: 8px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
   height: inherit;
   display: flex;
   align-items: center;
@@ -416,6 +420,11 @@
 :host ::ng-deep .mat-mdc-card-content {
   padding: 0 !important;
   height: 100%;
+}
+
+// Search bar specific padding override
+.search-bar-card ::ng-deep .mat-mdc-card-content.search-bar-content {
+  padding: 10px !important;
 }
 
 // Ensure page ends after candidate list (2 rows)

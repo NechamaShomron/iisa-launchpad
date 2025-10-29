@@ -14,7 +14,12 @@
       </div>
     </div>
 
-    <div class="flex flex-col gap-4">
+    @if (isLoading) {
+      <div class="flex justify-center items-center min-h-[400px]">
+        <mat-spinner diameter="60" strokeWidth="5" color="primary"></mat-spinner>
+      </div>
+    } @else {
+      <div class="flex flex-col gap-4">
       <!-- Top row: four graphs -->
       @if (!selectedCandidate) {
         <div class="top-cards-grid grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 w-full">
@@ -145,45 +150,75 @@
           <!-- Search then Candidate List -->
           <div class="w-full">
             <!-- Search/Filters -->
-            <mat-card class="mb-4" style="max-height: fit-content; max-width: fit-content;">
-              <mat-card-content class="p-0" style="max-height: fit-content;">
-                <div class="flex items-start gap-1 md:gap-2 p-2 flex-wrap md:flex-nowrap">
-                  <div class="flex-shrink-0 md:flex-none" style="max-width: fit-content;">
-                    <label class="block text-[12px] font-semibold text-gray-600 mb-0.5 ml-1">Search</label>
+            @if (candidates.length > 1) {
+            <mat-card class="mb-6 w-full search-bar-card">
+              <mat-card-content class="search-bar-content">
+                <div class="grid grid-cols-1 md:grid-cols-5 gap-4 w-full">
+                  <!-- Full Name -->
+                  <div class="w-full">
+                    <label class="block text-[12px] font-semibold text-gray-600 mb-1.5 ml-1">Full Name</label>
+                    <input 
+                      matInput 
+                      placeholder="Search by name"
+                      [(ngModel)]="nameSearch"
+                      (ngModelChange)="onNameSearchChange($event)"
+                      class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm">
+                  </div>
+                  
+                  <!-- Email -->
+                  <div class="w-full">
+                    <label class="block text-[12px] font-semibold text-gray-600 mb-1.5 ml-1">Email</label>
+                    <input 
+                      matInput 
+                      type="email"
+                      placeholder="Search by email"
+                      [(ngModel)]="emailSearch"
+                      (ngModelChange)="onEmailSearchChange($event)"
+                      class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm">
+    </div>
+
+                  <!-- City/Region -->
+                  <div class="w-full">
+                    <label class="block text-[12px] font-semibold text-gray-600 mb-1.5 ml-1">City/Region</label>
           <input 
             matInput 
-                      placeholder="Search name, email, or city"
-            [(ngModel)]="searchQuery"
-            (ngModelChange)="onSearchChange($event)"
-                      class="w-56 md:w-72 px-2 py-1 border border-gray-300 rounded-md text-sm">
+                      placeholder="Search by city"
+                      [(ngModel)]="citySearch"
+                      (ngModelChange)="onCitySearchChange($event)"
+                      class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm">
                   </div>
-                  <div>
-                    <label class="block text-[12px] font-semibold text-gray-600 mb-0.5 ml-1">Min Age</label>
+                  
+                  <!-- Min Age -->
+                  <div class="w-full">
+                    <label class="block text-[12px] font-semibold text-gray-600 mb-1.5 ml-1">Min Age</label>
           <input 
             matInput 
             type="number" 
                       placeholder="Min"
             [(ngModel)]="ageFilter.min"
             (ngModelChange)="onAgeFilterChange(ageFilter.min, ageFilter.max)"
-                      class="w-16 md:w-24 px-2 py-1 border border-gray-300 rounded-md text-sm">
+                      class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm">
                   </div>
-                  <div>
-                    <label class="block text-[12px] font-semibold text-gray-600 mb-0.5 ml-1">Max Age</label>
+          
+                  <!-- Max Age -->
+                  <div class="w-full">
+                    <label class="block text-[12px] font-semibold text-gray-600 mb-1.5 ml-1">Max Age</label>
           <input 
             matInput 
             type="number" 
                       placeholder="Max"
             [(ngModel)]="ageFilter.max"
             (ngModelChange)="onAgeFilterChange(ageFilter.min, ageFilter.max)"
-                      class="w-16 md:w-24 px-2 py-1 border border-gray-300 rounded-md text-sm">
+                      class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm">
                   </div>
         </div>
       </mat-card-content>
     </mat-card>
+            }
 
             <!-- Candidate List directly under Search -->
             <div class="cards-pull-up">
-              <app-candidate-list [candidates]="filteredCandidates" (candidateSelected)="onCandidateSelected($event)"></app-candidate-list>
+              <app-candidate-list [candidates]="filteredCandidates" [isLoading]="isLoading" (candidateSelected)="onCandidateSelected($event)"></app-candidate-list>
             </div>
           </div>
         </div>
@@ -202,8 +237,9 @@
             (candidateDeleted)="handleCandidateDeleted()"
             (goBack)="handleCandidateDeleted()">
           </app-candidate-detail>
-                </div>
-              }
-            </div>
+        </div>
+      }
+      </div>
+    }
   </div>
 </div>

@@ -13,6 +13,7 @@ import { MatAutocompleteModule } from '@angular/material/autocomplete';
 import { MatOptionModule } from '@angular/material/core';
 import { MatDialogModule } from '@angular/material/dialog';
 import { MatSnackBarModule } from '@angular/material/snack-bar';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 
 const MATERIAL_MODULES = [
   MatCardModule,
@@ -24,7 +25,8 @@ const MATERIAL_MODULES = [
   MatAutocompleteModule,
   MatOptionModule,
   MatDialogModule,
-  MatSnackBarModule
+  MatSnackBarModule,
+  MatProgressSpinnerModule
 ];
 
 const COMMON_MODULES = [

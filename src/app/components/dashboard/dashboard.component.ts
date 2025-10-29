@@ -1,4 +1,4 @@
-import { Component, OnInit, OnChanges, HostListener } from '@angular/core';
+import { Component, OnInit, OnChanges, HostListener, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, RouterModule } from '@angular/router';
 import { CandidateService } from '../../services/candidate.service';
@@ -14,6 +14,7 @@ import { FormsModule } from '@angular/forms';
 import { MatInputModule } from '@angular/material/input';
 import { MatCardHeader } from '@angular/material/card';
 import { MatCardTitle } from '@angular/material/card';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 
 @Component({
   selector: 'app-dashboard',
@@ -29,6 +30,7 @@ import { MatCardTitle } from '@angular/material/card';
     MatInputModule,
     MatCardHeader,
     MatCardTitle,
+    MatProgressSpinnerModule,
     CandidateListComponent,
     CandidateDetailComponent,
     CandidateMapComponent
@@ -41,9 +43,11 @@ export class DashboardComponent implements OnInit, OnChanges {
   filteredCandidates: Candidate[] = [];
   stats: VisitStats = { totalVisits: 0, totalRegistrations: 0, conversionRate: 0 };
   selectedCandidate?: Candidate;
-  searchQuery: string = '';
+  isLoading: boolean = true;
+  nameSearch: string = '';
+  emailSearch: string = '';
+  citySearch: string = '';
   ageFilter: { min: number; max: number } = { min: 18, max: 100 };
-  selectedCity: string = '';
   
   // Colors for age distribution segments - darker muted tones
   ageColors: string[] = [
@@ -126,14 +130,16 @@ export class DashboardComponent implements OnInit, OnChanges {
 
   // Store last filter state
   private lastFilterState = {
-    searchQuery: '',
-    ageFilter: { min: 18, max: 100 },
-    selectedCity: ''
+    nameSearch: '',
+    emailSearch: '',
+    citySearch: '',
+    ageFilter: { min: 18, max: 100 }
   };
 
   constructor(
     private candidateService: CandidateService,
-    private router: Router
+    private router: Router,
+    private cdr: ChangeDetectorRef
   ) {}
 
   @HostListener('window:resize')
@@ -147,16 +153,63 @@ export class DashboardComponent implements OnInit, OnChanges {
   }
 
   loadData(): void {
-    this.candidateService.getCandidates$().subscribe(candidates => {
-      this.candidates = candidates;
-      this.filterCandidates();
-      this.stats = this.candidateService.getStats();
-      this.updatePieChart();
-      this.updateAgePie();
-      this.updateAgeBars();
-      this.updateTrends();
-      this.updateRegDonut();
+    // Force loading state to show immediately
+    this.isLoading = true;
+    this.cdr.detectChanges(); // Force change detection to show spinner
+    
+    const loadingStartTime = Date.now();
+    const minDisplayTime = 800; // Minimum 800ms to ensure spinner is visible
+    
+    let isFirstLoad = true;
+    
+    // Subscribe to candidates - use a small delay to ensure spinner renders first
+    setTimeout(() => {
+      this.candidateService.getCandidates$().subscribe(candidates => {
+        if (isFirstLoad) {
+          this.candidates = candidates;
+          this.filterCandidates();
+          this.updateStats();
+          this.updatePieChart();
+          this.updateAgePie();
+          this.updateAgeBars();
+          this.updateTrends();
+          this.updateRegDonut();
+          
+          // Ensure minimum display time
+          const elapsed = Date.now() - loadingStartTime;
+          const remainingTime = Math.max(0, minDisplayTime - elapsed);
+          
+          setTimeout(() => {
+            this.isLoading = false;
+            this.cdr.detectChanges();
+          }, remainingTime);
+          
+          isFirstLoad = false;
+        } else {
+          // Subsequent updates don't trigger loading state
+          this.candidates = candidates;
+          this.filterCandidates();
+          this.updateStats();
+          this.updatePieChart();
+          this.updateAgePie();
+          this.updateAgeBars();
+          this.updateTrends();
+          this.updateRegDonut();
+        }
+      });
+    }, 50); // Small delay to ensure spinner renders
+
+    // Subscribe to visits to update stats when visits change
+    this.candidateService.visits$.subscribe(() => {
+      if (!this.isLoading) {
+        this.updateStats();
+        this.updateRegDonut();
+      }
     });
+  }
+
+  private updateStats(): void {
+    this.stats = this.candidateService.getStats();
   }
 
   updatePieChart(): void {
@@ -176,25 +229,43 @@ export class DashboardComponent implements OnInit, OnChanges {
   filterCandidates(): void {
     let filtered = [...this.candidates];
 
-    // Apply search filter
-    if (this.searchQuery) {
-      filtered = this.candidateService.searchCandidates(this.searchQuery);
+    // Apply name filter
+    if (this.nameSearch) {
+      const lowerName = this.nameSearch.toLowerCase();
+      filtered = filtered.filter(c => c.fullName.toLowerCase().includes(lowerName));
+    }
+
+    // Apply email filter
+    if (this.emailSearch) {
+      const lowerEmail = this.emailSearch.toLowerCase();
+      filtered = filtered.filter(c => c.email.toLowerCase().includes(lowerEmail));
+    }
+
+    // Apply city/region filter
+    if (this.citySearch) {
+      const lowerCity = this.citySearch.toLowerCase();
+      filtered = filtered.filter(c => c.city.toLowerCase().includes(lowerCity));
     }
 
     // Apply age filter (treat empty max age as 100)
     const maxAge = this.ageFilter.max || 100;
     filtered = filtered.filter(c => c.age >= this.ageFilter.min && c.age <= maxAge);
 
-    // Apply city filter
-    if (this.selectedCity) {
-      filtered = filtered.filter(c => c.city.toLowerCase() === this.selectedCity.toLowerCase());
-    }
-
     this.filteredCandidates = filtered;
   }
 
-  onSearchChange(query: string): void {
-    this.searchQuery = query;
+  onNameSearchChange(value: string): void {
+    this.nameSearch = value;
+    this.filterCandidates();
+  }
+
+  onEmailSearchChange(value: string): void {
+    this.emailSearch = value;
+    this.filterCandidates();
+  }
+
+  onCitySearchChange(value: string): void {
+    this.citySearch = value;
     this.filterCandidates();
   }
 
@@ -203,15 +274,11 @@ export class DashboardComponent implements OnInit, OnChanges {
     this.filterCandidates();
   }
 
-  onCityFilterChange(city: string): void {
-    this.selectedCity = city;
-    this.filterCandidates();
-  }
-
   clearFilters(): void {
-    this.searchQuery = '';
+    this.nameSearch = '';
+    this.emailSearch = '';
+    this.citySearch = '';
     this.ageFilter = { min: 18, max: 100 };
-    this.selectedCity = '';
     this.filterCandidates();
   }
 
@@ -409,8 +476,7 @@ export class DashboardComponent implements OnInit, OnChanges {
   onCandidateSelected(candidate: Candidate): void {
     // Save current filter state before clearing
     this.saveFilterState();
-    // Clear filters when selecting a candidate
-    this.clearFilters();
+    // Don't clear filters - just select the candidate
     this.selectedCandidate = candidate;
     
     // Scroll to top smoothly when opening candidate detail
@@ -419,16 +485,18 @@ export class DashboardComponent implements OnInit, OnChanges {
   
   private saveFilterState(): void {
     this.lastFilterState = {
-      searchQuery: this.searchQuery,
-      ageFilter: { ...this.ageFilter },
-      selectedCity: this.selectedCity
+      nameSearch: this.nameSearch,
+      emailSearch: this.emailSearch,
+      citySearch: this.citySearch,
+      ageFilter: { ...this.ageFilter }
     };
   }
   
   private restoreFilters(): void {
-    this.searchQuery = this.lastFilterState.searchQuery;
+    this.nameSearch = this.lastFilterState.nameSearch;
+    this.emailSearch = this.lastFilterState.emailSearch;
+    this.citySearch = this.lastFilterState.citySearch;
     this.ageFilter = this.lastFilterState.ageFilter;
-    this.selectedCity = this.lastFilterState.selectedCity;
     this.filterCandidates();
   }
 

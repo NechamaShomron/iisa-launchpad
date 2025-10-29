@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule, AbstractControl, ValidationErrors } from '@angular/forms';
 import { CandidateService } from '../../services/candidate.service';
 import { Candidate } from '../../models/candidate.model';
@@ -11,6 +11,7 @@ import { MatCardModule } from '@angular/material/card';
 import { MatIconModule } from '@angular/material/icon';
 import { MatAutocompleteModule } from '@angular/material/autocomplete';
 import { MatOptionModule } from '@angular/material/core';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 
 @Component({
   selector: 'app-registration-form',
@@ -25,7 +26,8 @@ import { MatOptionModule } from '@angular/material/core';
     MatButtonModule,
     MatCardModule,
     MatSnackBarModule,
-    MatIconModule
+    MatIconModule,
+    MatProgressSpinnerModule
   ],
   templateUrl: './registration-form.component.html',
   styleUrl: './registration-form.component.scss'
@@ -34,6 +36,7 @@ export class RegistrationFormComponent implements OnInit {
   registrationForm: FormGroup;
   previewImage?: string;
   editingCandidate?: Candidate;
+  isLoading: boolean = true;
   
   // Location lists
   cities: string[] = [
@@ -64,7 +67,8 @@ export class RegistrationFormComponent implements OnInit {
   constructor(
     private fb: FormBuilder,
     private candidateService: CandidateService,
-    private snackBar: MatSnackBar
+    private snackBar: MatSnackBar,
+    private cdr: ChangeDetectorRef
   ) {
     this.registrationForm = this.fb.group({
       fullName: ['', [Validators.required, Validators.minLength(2)]],
@@ -79,7 +83,6 @@ export class RegistrationFormComponent implements OnInit {
   }
 
   ngOnInit(): void {
-    this.checkIfEditing();
     // Initialize filtered lists and wire up filtering
     const cityCtrl = this.registrationForm.get('city');
     this.filteredCities = [...this.cities];
@@ -89,6 +92,50 @@ export class RegistrationFormComponent implements OnInit {
       this.filteredCities = this.cities.filter(c => c.toLowerCase().includes(q));
       this.filteredRegions = this.regions.filter(r => r.toLowerCase().includes(q));
     });
+    
+    // Clear edit state if user navigates directly to registration (not from edit)
+    // This prevents conflicts if multiple users are registering simultaneously
+    const editCandidateId = localStorage.getItem('editCandidateId');
+    if (!editCandidateId) {
+      // No edit state - this is a fresh registration
+      this.editingCandidate = undefined;
+    }
+
+    // Subscribe to candidates$ to wait for Firebase data to load before checking for editing
+    this.isLoading = true;
+    this.cdr.detectChanges(); // Force change detection to show spinner
+    
+    const loadingStartTime = Date.now();
+    const minDisplayTime = 600; // Minimum 600ms to ensure spinner is visible
+    
+    let isFirstLoad = true;
+    
+    // Small delay to ensure spinner renders first
+    setTimeout(() => {
+      this.candidateService.getCandidates$().subscribe(candidates => {
+        if (isFirstLoad) {
+          if (candidates.length > 0 || this.editingCandidate) {
+            this.checkIfEditing();
+          }
+          
+          // Ensure minimum display time
+          const elapsed = Date.now() - loadingStartTime;
+          const remainingTime = Math.max(0, minDisplayTime - elapsed);
+          
+          setTimeout(() => {
+            this.isLoading = false;
+            this.cdr.detectChanges();
+          }, remainingTime);
+          
+          isFirstLoad = false;
+        } else {
+          // Subsequent updates don't trigger loading state
+          if (candidates.length > 0 || this.editingCandidate) {
+            this.checkIfEditing();
+          }
+        }
+      });
+    }, 50); // Small delay to ensure spinner renders
   }
 
   checkIfEditing(): void {
@@ -110,6 +157,15 @@ export class RegistrationFormComponent implements OnInit {
         
         this.editingCandidate = candidate;
         this.loadCandidateData(candidate);
+      } else {
+        // Candidate not found - might still be loading, try again after a short delay
+        setTimeout(() => {
+          const retryCandidate = this.candidateService.getCandidateById(candidateId);
+          if (retryCandidate) {
+            this.editingCandidate = retryCandidate;
+            this.loadCandidateData(retryCandidate);
+          }
+        }, 500);
       }
     }
   }
@@ -182,6 +238,37 @@ export class RegistrationFormComponent implements OnInit {
       
       try {
         if (this.editingCandidate) {
+          // Verify candidate still exists before updating (handles concurrent deletion)
+          const currentCandidate = this.candidateService.getCandidateById(this.editingCandidate.id);
+          if (!currentCandidate) {
+            this.snackBar.open('This candidate no longer exists. It may have been deleted.', 'Close', {
+              duration: 5000,
+              panelClass: ['error-snackbar']
+            });
+            localStorage.removeItem('editCandidateId');
+            setTimeout(() => {
+              window.location.href = '/dashboard';
+            }, 1500);
+            return;
+          }
+          
+          // Verify registration date hasn't changed (prevents editing old registrations that became ineligible)
+          const registrationDate = new Date(currentCandidate.registrationDate);
+          const today = new Date();
+          const daysDiff = Math.floor((today.getTime() - registrationDate.getTime()) / (1000 * 60 * 60 * 24));
+          
+          if (daysDiff >= 3) {
+            this.snackBar.open('This registration is too old to edit.', 'Close', {
+              duration: 5000,
+              panelClass: ['error-snackbar']
+            });
+            localStorage.removeItem('editCandidateId');
+            setTimeout(() => {
+              window.location.href = '/dashboard';
+            }, 1500);
+            return;
+          }
+          
           // Update existing candidate
           const candidate: Candidate = {
             id: this.editingCandidate.id,
@@ -203,6 +290,9 @@ export class RegistrationFormComponent implements OnInit {
           });
           localStorage.removeItem('editCandidateId');
         } else {
+          // Clear any existing edit state to prevent conflicts
+          localStorage.removeItem('editCandidateId');
+          
           // Add new candidate (no ID - Firebase will generate it)
           const candidate: Candidate = {
             id: '', // Empty ID - Firebase will generate one

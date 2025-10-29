@@ -1,4 +1,8 @@
-@if (candidate) {
+@if (isLoading) {
+  <div class="flex justify-center items-center min-h-[400px]">
+    <mat-spinner diameter="60" strokeWidth="5" color="primary"></mat-spinner>
+  </div>
+} @else if (candidate) {
   <div class="max-w-4xl mx-auto px-4">
     <mat-card>
       <mat-card-content class="p-8" style="padding: 3% !important;">
