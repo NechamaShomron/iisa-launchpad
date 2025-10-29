@@ -1,0 +1,42 @@
+.chart-surface {
+  background: #f3f4f6;
+  border-radius: 12px;
+  padding: 8px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.age-bar-svg {
+  width: 100%;
+  max-width: 420px;
+  height: -webkit-fill-available;
+  margin: 0 auto;
+  display: block;
+}
+
+.age-bar-svg .grid {
+  stroke: #e5e7eb;
+  stroke-width: 1;
+}
+
+.age-bar-svg .bar {
+  rx: 6;
+}
+
+.age-bar-svg .x-label {
+  fill: #6b7280;
+  font-size: 12px;
+}
+
+@media (max-width: 767px) {
+  .age-bar-svg {
+    width: 100% !important;
+    max-width: 100% !important; // allow full width on mobile
+  }
+  .chart-surface {
+    width: 100% !important;
+  }
+}
+
+

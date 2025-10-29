@@ -1,0 +1,117 @@
+@if (isLoading) {
+  <div class="flex justify-center items-center min-h-[400px]">
+    <mat-spinner diameter="60" strokeWidth="5" color="primary"></mat-spinner>
+  </div>
+} @else if (candidate) {
+  <div class="max-w-4xl mx-auto px-4">
+    <mat-card>
+      <mat-card-content class="p-8" style="padding: 3% !important;">
+        <!-- Header -->
+        <div class="flex items-center justify-end mb-6">
+          <div class="flex gap-2 items-center">
+            <span class="edit-wrapper">
+              <button mat-raised-button 
+                      color="primary" 
+                      (click)="editCandidate()"
+                      [disabled]="!isEditable()">
+                <mat-icon>edit</mat-icon>
+                Edit
+              </button>
+              @if (!isEditable()) {
+                <span class="edit-disabled-msg">Editing disabled: Registration is more than 3 days old</span>
+              }
+            </span>
+            <button mat-raised-button color="warn" (click)="deleteCandidate()">
+              <mat-icon>delete</mat-icon>
+              Delete
+            </button>
+          </div>
+        </div>
+
+        <!-- Candidate Profile -->
+        <div class="flex flex-col md:flex-row items-start mb-8">
+          @if (candidate.profileImage) {
+            <img [src]="candidate.profileImage" 
+                 [alt]="candidate.fullName" 
+                 class="w-48 h-48 rounded-full object-cover mb-4 md:mb-0 md:mr-8">
+          } @else {
+            <div class="w-48 h-48 rounded-full bg-blue-500 flex items-center justify-center text-white text-6xl font-bold mb-4 md:mb-0 md:mr-8">
+              {{ candidate.fullName.charAt(0) }}
+            </div>
+          }
+          
+          <div class="flex-1">
+            <h1 class="text-4xl font-bold text-space-blue mb-4">{{ candidate.fullName }}</h1>
+            <div class="grid grid-cols-2 gap-4">
+              <div>
+                <p class="text-gray-600 mb-1">Age</p>
+                <p class="text-lg font-semibold">{{ candidate.age }} years</p>
+              </div>
+              <div>
+                <p class="text-gray-600 mb-1">Location</p>
+                <p class="text-lg font-semibold">{{ candidate.city }}</p>
+              </div>
+              <div>
+                <p class="text-gray-600 mb-1">Email</p>
+                <p class="text-lg font-semibold">{{ candidate.email }}</p>
+              </div>
+              <div>
+                <p class="text-gray-600 mb-1">Phone</p>
+                <p class="text-lg font-semibold">{{ candidate.phone }}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Hobbies -->
+        <div class="mb-8">
+          <h2 class="text-2xl font-bold text-space-blue mb-3">Hobbies</h2>
+          <p class="text-gray-700">{{ candidate.hobbies }}</p>
+        </div>
+
+        <!-- Why Perfect -->
+        <div class="mb-8">
+          <h2 class="text-2xl font-bold text-space-blue mb-3">Why I'm the Perfect Candidate</h2>
+          <p class="text-gray-700 leading-relaxed">{{ candidate.whyPerfect }}</p>
+        </div>
+
+        <!-- Registration Info -->
+        <div class="border-t pt-6 grid grid-cols-2 gap-4">
+          <div>
+            <p class="text-gray-600 mb-1">Registration Date</p>
+            <p class="text-sm font-semibold">{{ candidate.registrationDate | date:'medium' }}</p>
+          </div>
+          <div>
+            <p class="text-gray-600 mb-1">Last Updated</p>
+            <p class="text-sm font-semibold">{{ candidate.lastUpdated | date:'medium' }}</p>
+          </div>
+        </div>
+      </mat-card-content>
+    </mat-card>
+
+    <!-- Navigation -->
+    <div class="flex justify-between mt-8">
+      @if (previousCandidate) {
+        <button mat-raised-button 
+                (click)="navigateToCandidate(previousCandidate!)"
+                class="flex items-center">
+          <mat-icon>arrow_back</mat-icon>
+          Previous
+        </button>
+      } @else {
+        <div></div>
+      }
+      
+      @if (nextCandidate) {
+        <button mat-raised-button 
+                (click)="navigateToCandidate(nextCandidate!)"
+                class="flex items-center">
+          Next
+          <mat-icon>arrow_forward</mat-icon>
+        </button>
+      }
+    </div>
+  </div>
+}
+
+

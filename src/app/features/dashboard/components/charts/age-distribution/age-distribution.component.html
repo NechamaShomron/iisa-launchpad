@@ -1,0 +1,17 @@
+<div class="chart-surface" style="padding:6px">
+  <svg [attr.viewBox]="'0 0 ' + ageBarWidth + ' ' + ageBarHeight" class="age-bar-svg age-bar-svg--phone">
+    <ng-container *ngFor="let t of [0,0.25,0.5,0.75,1]; let i = index">
+      <line class="grid" [attr.x1]="ageBarPadding.left" [attr.x2]="ageBarWidth - ageBarPadding.right"
+            [attr.y1]="ageBarPadding.top + (1 - t) * (ageBarHeight - ageBarPadding.top - ageBarPadding.bottom)"
+            [attr.y2]="ageBarPadding.top + (1 - t) * (ageBarHeight - ageBarPadding.top - ageBarPadding.bottom)" />
+    </ng-container>
+    <ng-container *ngFor="let b of ageBars; let i = index">
+      <rect class="bar" [attr.x]="b.x" [attr.y]="b.y" [attr.width]="b.width" [attr.height]="b.height" [attr.fill]="ageColors[i]" />
+    </ng-container>
+    <ng-container *ngFor="let b of ageBars; let i = index">
+      <text class="x-label" [attr.transform]="'translate(' + (b.x + b.width/2 - 12) + ',' + (ageBarHeight - 30) + ') rotate(-45)'" text-anchor="middle">{{ b.label }}</text>
+    </ng-container>
+  </svg>
+</div>
+
+

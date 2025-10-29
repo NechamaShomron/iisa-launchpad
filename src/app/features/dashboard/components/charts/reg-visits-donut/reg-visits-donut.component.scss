@@ -1,0 +1,14 @@
+.reg-pie { 
+  width: 100%;
+  max-width: 140px;
+  height: auto;
+  display: block;
+  margin: 0 auto;
+}
+
+.regvis-content { min-height: 0; }
+
+.legend-item { display: flex; align-items: center; gap: 6px; color: #374151; font-weight: 500; }
+.legend-dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
+
+

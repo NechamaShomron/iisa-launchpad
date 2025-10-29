@@ -1,0 +1,202 @@
+<div class="registration-container">
+  <!-- Cosmic Elements -->
+  <div class="planet planet-1"></div>
+  <div class="planet planet-2"></div>
+  <div class="planet planet-3"></div>
+  <div class="planet planet-4"></div>
+  <div class="planet planet-5"></div>
+  <div class="meteor meteor-1"></div>
+  <div class="meteor meteor-2"></div>
+  <div class="meteor meteor-3"></div>
+  <div class="meteor meteor-4"></div>
+  <div class="meteor meteor-5"></div>
+
+  @if (isLoading) {
+    <div class="flex justify-center items-center min-h-[500px] w-full">
+      <mat-spinner diameter="60" strokeWidth="5" color="primary"></mat-spinner>
+    </div>
+  } @else {
+    <div class="w-full">
+      <mat-card class="form-card">
+        <div class="form-content">
+        <h2 class="form-title">
+          {{ editingCandidate ? 'Update Your Registration' : 'Space Flight Registration' }}
+        </h2>
+
+        <form [formGroup]="registrationForm" (ngSubmit)="onSubmit()">
+          <!-- Personal Information Section -->
+          <div class="form-section">
+            <div class="section-title">
+              <mat-icon>person</mat-icon>
+              <span>Personal Information</span>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <!-- Full Name -->
+              <mat-form-field appearance="fill" class="w-full">
+                <mat-label>Full Name</mat-label>
+                <input matInput formControlName="fullName" required>
+                <mat-icon matPrefix>account_circle</mat-icon>
+                @if (registrationForm.get('fullName')?.hasError('required') && registrationForm.get('fullName')?.touched) {
+                  <mat-error>Name is required</mat-error>
+                }
+              </mat-form-field>
+
+              <!-- Email -->
+              <mat-form-field appearance="fill" class="w-full">
+                <mat-label>Email</mat-label>
+                <input matInput type="email" formControlName="email" required>
+                <mat-icon matPrefix>email</mat-icon>
+                @if (registrationForm.get('email')?.hasError('required') && registrationForm.get('email')?.touched) {
+                  <mat-error>Email is required</mat-error>
+                }
+                @if (registrationForm.get('email')?.hasError('email') && registrationForm.get('email')?.touched) {
+                  <mat-error>Please enter a valid email</mat-error>
+                }
+              </mat-form-field>
+
+              <!-- Phone -->
+              <mat-form-field appearance="fill" class="w-full">
+                <mat-label>Phone Number</mat-label>
+                <input matInput type="tel" formControlName="phone" required maxlength="10" pattern="[0-9]{10}" inputmode="numeric" (input)="onPhoneInput($event)">
+                <mat-icon matPrefix>phone</mat-icon>
+                @if (registrationForm.get('phone')?.hasError('required') && registrationForm.get('phone')?.touched) {
+                  <mat-error>Phone is required</mat-error>
+                }
+                @if (registrationForm.get('phone')?.hasError('pattern') && registrationForm.get('phone')?.touched) {
+                  <mat-error>Phone must contain exactly 10 digits</mat-error>
+                }
+              </mat-form-field>
+
+              <!-- Age -->
+              <mat-form-field appearance="fill" class="w-full">
+                <mat-label>Age</mat-label>
+                <input matInput type="number" formControlName="age" required>
+                <mat-icon matPrefix>calendar_today</mat-icon>
+                @if (registrationForm.get('age')?.hasError('required') && registrationForm.get('age')?.touched) {
+                  <mat-error>Age is required</mat-error>
+                }
+                @if (registrationForm.get('age')?.hasError('min') || registrationForm.get('age')?.hasError('max')) {
+                  <mat-error>Age must be between 18 and 100</mat-error>
+                }
+              </mat-form-field>
+
+              <!-- City -->
+              <mat-form-field appearance="fill" class="w-full">
+                <mat-label>City or Region</mat-label>
+                <input matInput formControlName="city" [matAutocomplete]="auto" required>
+                <mat-autocomplete #auto="matAutocomplete" autoActiveFirstOption>
+                  <mat-optgroup label="Cities">
+                    @for (city of filteredCities; track city) {
+                      <mat-option [value]="city">{{ city }}</mat-option>
+                    }
+                  </mat-optgroup>
+                  <mat-optgroup label="Regions">
+                    @for (region of filteredRegions; track region) {
+                      <mat-option [value]="region">{{ region }}</mat-option>
+                    }
+                  </mat-optgroup>
+                </mat-autocomplete>
+                <mat-icon matPrefix>location_city</mat-icon>
+                @if ((registrationForm.get('city')?.hasError('required') || registrationForm.get('city')?.hasError('invalidLocation')) && registrationForm.get('city')?.touched) {
+                  <mat-error>Please select a valid city or region from the list</mat-error>
+                }
+              </mat-form-field>
+
+              <!-- Profile Image Upload -->
+              <div class="w-full">
+                <label class="block text-sm font-semibold text-gray-700 mb-2 ml-1">
+                  Profile Image (Required)
+                </label>
+                <input type="file" 
+                       accept="image/jpeg,image/png,.jpg,.jpeg,.png" 
+                       (change)="onFileSelected($event)"
+                       id="fileInput"
+                       class="hidden">
+                <label for="fileInput" class="file-upload-label">
+                  <mat-icon>camera_alt</mat-icon>
+                  <span class="text-sm font-medium">Choose file</span>
+                </label>
+                @if (registrationForm.get('profileImage')?.hasError('required') && registrationForm.get('profileImage')?.touched) {
+                  <div class="mt-1 text-sm text-red-600 ml-1">Profile image is required</div>
+                }
+              </div>
+            </div>
+            
+            @if (previewImage) {
+              <div class="col-span-2 mt-4 flex justify-center">
+                <div class="flex items-center gap-4">
+                  <img [src]="previewImage" alt="Preview" class="w-32 h-32 object-cover rounded-full border-4 border-gray-100">
+                  <button mat-icon-button color="warn" (click)="removeImage()">
+                    <mat-icon>delete</mat-icon>
+                  </button>
+                </div>
+              </div>
+            }
+          </div>
+
+          <!-- Additional Information Section -->
+          <div class="form-section">
+            <div class="section-title">
+              <mat-icon>info</mat-icon>
+              <span>Additional Information</span>
+            </div>
+            
+            <!-- Hobbies -->
+            <mat-form-field appearance="fill" class="w-full textarea-field">
+              <mat-label>Hobbies</mat-label>
+              <textarea matInput formControlName="hobbies" rows="3" required></textarea>
+              <mat-icon matPrefix>sports_esports</mat-icon>
+              @if (registrationForm.get('hobbies')?.hasError('required') && registrationForm.get('hobbies')?.touched) {
+                <mat-error>Hobbies are required</mat-error>
+              }
+            </mat-form-field>
+
+            <!-- Why Perfect -->
+            <mat-form-field appearance="fill" class="w-full textarea-field mt-4">
+              <mat-label>Why I am the Perfect Candidate</mat-label>
+              <textarea matInput formControlName="whyPerfect" rows="4" required></textarea>
+              <mat-icon matPrefix>star</mat-icon>
+              @if (registrationForm.get('whyPerfect')?.hasError('required') && registrationForm.get('whyPerfect')?.touched) {
+                <mat-error>This field is required</mat-error>
+              }
+              @if (registrationForm.get('whyPerfect')?.hasError('minlength') && registrationForm.get('whyPerfect')?.touched) {
+                <mat-error>Please provide at least 20 characters</mat-error>
+              }
+              <mat-hint>Minimum 20 characters</mat-hint>
+            </mat-form-field>
+          </div>
+
+          <!-- Submit Button -->
+          <div class="mt-6 flex justify-center">
+            <button mat-raised-button color="primary" type="submit" 
+                    [disabled]="registrationForm.invalid" 
+                    class="submit-btn">
+              <mat-icon>send</mat-icon>
+              {{ editingCandidate ? 'Update Registration' : 'Submit Registration' }}
+            </button>
+          </div>
+        </form>
+      </div>
+
+      <!-- Space Visual Sidebar -->
+      <div class="space-visual">
+        <div class="abstract-shape shape-1"></div>
+        <div class="abstract-shape shape-2"></div>
+        <div class="abstract-shape shape-3"></div>
+        
+        <div class="space-content">
+          <div class="mb-6 flex items-center gap-4">
+            <mat-icon class="logo-icon">rocket_launch</mat-icon>
+            <div class="text-2xl font-bold text-gray-900 tracking-wide">IISA</div>
+          </div>
+          
+          <h3>Ready for Liftoff?</h3>
+          <p class="mb-0">You're about to embark on an extraordinary journey. Complete your registration to join Israel's first space mission and make history among the stars.</p>
+        </div>
+      </div>
+    </mat-card>
+  </div>
+  }
+</div>
+
+

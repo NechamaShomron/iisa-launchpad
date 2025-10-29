@@ -1,0 +1,12 @@
+:host {
+  display: block;
+}
+
+@media (max-width: 767px) {
+  .trend-card {
+    padding-top: 0 !important;
+    margin-top: -6px; // raise the content slightly on mobile
+  }
+}
+
+

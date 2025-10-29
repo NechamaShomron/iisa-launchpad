@@ -1,0 +1,11 @@
+<div class="regvis-content flex items-center justify-center gap-2 h-full w-full pt-2 pr-2">
+  <svg [attr.viewBox]="'0 0 ' + regPieSize + ' ' + regPieSize" class="reg-pie">
+    <circle cx="50" cy="50" r="35" fill="none" stroke="#e5e7eb" stroke-width="10" stroke-linecap="butt" />
+    <circle cx="50" cy="50" r="35" fill="none" stroke="#3b82f6" stroke-width="10" stroke-linecap="butt"
+            [attr.stroke-dasharray]="regCircumference" [attr.stroke-dashoffset]="(1 - regPercent) * regCircumference"
+            style="transform: rotate(-90deg); transform-origin: 50% 50%;" />
+  </svg>
+  <ng-content></ng-content>
+</div>
+
+

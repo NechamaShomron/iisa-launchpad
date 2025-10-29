@@ -1,7 +1,8 @@
 import { NgModule } from '@angular/core';
 import { RouterModule } from '@angular/router';
+import { LandingRoutingModule } from './landing-routing.module';
 
-import { RegistrationFormComponent } from '../../components/registration-form/registration-form.component';
+import { RegistrationFormComponent } from './components/registration-form/registration-form.component';
 
 /**
  * LandingModule handles the landing/registration page feature
@@ -9,9 +10,7 @@ import { RegistrationFormComponent } from '../../components/registration-form/re
 @NgModule({
   declarations: [],
   imports: [
-    RouterModule.forChild([
-      { path: '', component: RegistrationFormComponent }
-    ]),
+    LandingRoutingModule,
     RegistrationFormComponent // Import standalone component
   ]
 })

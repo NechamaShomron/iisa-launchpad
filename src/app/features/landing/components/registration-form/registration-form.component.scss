@@ -1,0 +1,612 @@
+.registration-container {
+  background: linear-gradient(135deg, #0a0e27 0%, #1a1f3a 50%, #2d1b4e 100%);
+  padding: 1.5rem 1rem 0 1rem;
+  position: relative;
+  overflow: hidden;
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+}
+
+// Starfield background
+.registration-container::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: 
+    radial-gradient(2px 2px at 20px 30px, #eee, transparent),
+    radial-gradient(2px 2px at 60px 70px, rgba(255,255,255,0.8), transparent),
+    radial-gradient(1px 1px at 50px 50px, rgba(255,255,255,0.9), transparent),
+    radial-gradient(1px 1px at 80px 60px, rgba(255,255,255,0.7), transparent),
+    radial-gradient(2px 2px at 90px 30px, rgba(255,255,255,0.6), transparent),
+    radial-gradient(1px 1px at 130px 60px, rgba(255,255,255,0.8), transparent),
+    radial-gradient(2px 2px at 150px 20px, rgba(255,255,255,0.6), transparent),
+    radial-gradient(3px 3px at 200px 80px, rgba(255,255,255,0.9), transparent);
+  background-size: 100% 100%;
+  pointer-events: none;
+  opacity: 0.8;
+}
+
+// Space planets and cosmic elements
+.registration-container::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  pointer-events: none;
+}
+
+.planet {
+  position: absolute;
+  border-radius: 50%;
+  pointer-events: none;
+}
+
+.planet-1 {
+  width: 200px;
+  height: 200px;
+  background: radial-gradient(circle at 30% 30%, #ff6b6b, #dc143c);
+  top: 20%;
+  right: -50px;
+  box-shadow: 0 0 40px rgba(255, 107, 107, 0.5),
+              0 0 80px rgba(255, 107, 107, 0.3),
+              inset -30px -30px 0 rgba(139, 0, 0, 0.5);
+}
+
+.planet-2 {
+  width: 150px;
+  height: 150px;
+  background: radial-gradient(circle at 40% 40%, #ffd93d, #f39c12);
+  bottom: 15%;
+  left: -40px;
+  box-shadow: 0 0 30px rgba(255, 217, 61, 0.5),
+              0 0 60px rgba(255, 217, 61, 0.3),
+              inset -20px -20px 0 rgba(184, 134, 11, 0.5);
+}
+
+.planet-3 {
+  width: 120px;
+  height: 120px;
+  background: radial-gradient(circle at 35% 35%, #4ecdc4, #26a69a);
+  top: 60%;
+  left: 20%;
+  box-shadow: 0 0 25px rgba(78, 205, 196, 0.5),
+              0 0 50px rgba(78, 205, 196, 0.3),
+              inset -15px -15px 0 rgba(0, 128, 128, 0.5);
+}
+
+.planet-4 {
+  width: 80px;
+  height: 80px;
+  background: radial-gradient(circle at 30% 30%, #a29bfe, #6c5ce7);
+  top: 30%;
+  right: 25%;
+  box-shadow: 0 0 20px rgba(162, 155, 254, 0.5),
+              0 0 40px rgba(162, 155, 254, 0.3);
+}
+
+.planet-5 {
+  width: 100px;
+  height: 100px;
+  background: radial-gradient(circle at 40% 40%, #ffeaa7, #fdcb6e);
+  bottom: 40%;
+  right: 10%;
+  box-shadow: 0 0 25px rgba(255, 234, 167, 0.5),
+              0 0 50px rgba(255, 234, 167, 0.3);
+}
+
+.meteor {
+  position: absolute;
+  width: 4px;
+  height: 4px;
+  background: #fff;
+  border-radius: 50%;
+  box-shadow: 0 0 10px #fff, 0 0 20px #fff;
+}
+
+.meteor-1 { top: 25%; right: 15%; animation: twinkle 3s infinite; }
+.meteor-2 { top: 60%; left: 30%; animation: twinkle 2s infinite 0.5s; }
+.meteor-3 { top: 10%; left: 50%; animation: twinkle 2.5s infinite 1s; }
+.meteor-4 { bottom: 30%; right: 45%; animation: twinkle 3.5s infinite 1.5s; }
+.meteor-5 { bottom: 60%; left: 10%; animation: twinkle 2s infinite; }
+
+@keyframes twinkle {
+  0%, 100% { opacity: 0.2; transform: scale(0.8); }
+  50% { opacity: 1; transform: scale(1.2); }
+}
+
+.form-header {
+  text-align: center;
+  margin-bottom: 1.5rem;
+  position: relative;
+  z-index: 1;
+}
+
+.form-header h1 {
+  font-size: 1.75rem;
+  font-weight: 800;
+  color: white;
+  margin-bottom: 0.25rem;
+  letter-spacing: -0.02em;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.form-header p {
+  font-size: 0.95rem;
+  color: rgba(255, 255, 255, 0.95);
+  margin-bottom: 0.75rem;
+  font-weight: 300;
+}
+
+.badge {
+  display: inline-block;
+  padding: 0.75rem 1.5rem;
+  background: rgba(255, 255, 255, 0.2);
+  backdrop-filter: blur(10px);
+  color: white;
+  border-radius: 50px;
+  font-weight: 600;
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+}
+
+.form-card {
+  background: white;
+  border-radius: 24px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
+  position: relative;
+  z-index: 1;
+  display: grid;
+  grid-template-columns: 1fr 400px;
+  max-width: 1400px;
+  margin: 0 auto;
+  max-height: 95vh;
+  overflow: hidden;
+}
+
+@media (max-width: 1024px) {
+  .form-card {
+    grid-template-columns: 1fr !important;
+    max-height: 98vh;
+  }
+  
+  .space-visual {
+    display: none !important;
+    visibility: hidden !important;
+    width: 0 !important;
+    padding: 0 !important;
+    margin: 0 !important;
+  }
+}
+
+.space-visual {
+  background: #f0f4f8;
+  border-radius: 0 24px 24px 0;
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 0;
+  background-image: 
+    radial-gradient(ellipse at 20% 30%, rgba(102, 126, 234, 0.15) 0%, transparent 50%),
+    radial-gradient(ellipse at 80% 70%, rgba(118, 75, 162, 0.12) 0%, transparent 50%),
+    radial-gradient(ellipse at 40% 80%, rgba(240, 147, 251, 0.1) 0%, transparent 50%);
+}
+
+// Blurred abstract shapes in background
+.space-visual::before {
+  content: '';
+  position: absolute;
+  top: 15%;
+  right: 20%;
+  width: 300px;
+  height: 300px;
+  background: radial-gradient(ellipse, rgba(102, 126, 234, 0.2) 0%, transparent 70%);
+  border-radius: 50%;
+  pointer-events: none;
+  filter: blur(80px);
+  transform: rotate(-20deg);
+}
+
+.space-visual::after {
+  content: '';
+  position: absolute;
+  bottom: 20%;
+  left: 15%;
+  width: 250px;
+  height: 200px;
+  background: radial-gradient(ellipse, rgba(118, 75, 162, 0.18) 0%, transparent 70%);
+  border-radius: 40%;
+  pointer-events: none;
+  filter: blur(70px);
+}
+
+.abstract-shape {
+  position: absolute;
+  pointer-events: none;
+  filter: blur(50px);
+}
+
+.shape-1 {
+  top: 10%;
+  right: 10%;
+  width: 200px;
+  height: 180px;
+  background: radial-gradient(ellipse, rgba(240, 147, 251, 0.15) 0%, transparent 60%);
+  border-radius: 30%;
+  transform: rotate(45deg);
+}
+
+.shape-2 {
+  bottom: 15%;
+  right: 25%;
+  width: 180px;
+  height: 150px;
+  background: radial-gradient(ellipse, rgba(102, 126, 234, 0.12) 0%, transparent 60%);
+  border-radius: 35%;
+  transform: rotate(-30deg);
+}
+
+.shape-3 {
+  top: 50%;
+  left: 10%;
+  width: 160px;
+  height: 160px;
+  background: radial-gradient(circle, rgba(118, 75, 162, 0.1) 0%, transparent 60%);
+  border-radius: 50%;
+}
+
+.space-visual h3 {
+  font-size: 2rem;
+  font-weight: 700;
+  color: #1a202c;
+  margin-bottom: 1.25rem;
+  position: relative;
+  z-index: 3;
+  line-height: 1.2;
+}
+
+.space-visual p {
+  font-size: 0.95rem;
+  color: #4a5568;
+  line-height: 1.6;
+  position: relative;
+  z-index: 3;
+}
+
+.space-content {
+  position: relative;
+  z-index: 2;
+  background: white;
+  padding: 3rem 2.5rem;
+  border-radius: 16px;
+  margin: 2rem;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+}
+
+.form-title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #1e3a5f;
+  margin-bottom: 1.25rem;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.form-title::before {
+  content: '';
+  width: 4px;
+  height: 1.75rem;
+  background: linear-gradient(135deg, #1e3a5f 0%, #2d5a87 100%);
+  border-radius: 2px;
+}
+
+.form-content {
+  padding: 2rem;
+  overflow-y: auto;
+  max-height: 85vh;
+  min-height: 85vh;
+}
+
+@media (max-width: 1024px) {
+  .form-content {
+    max-height: 90vh;
+    min-height: 90vh;
+  }
+}
+
+::ng-deep .mat-mdc-form-field {
+  width: 100%;
+}
+
+::ng-deep .submit-btn.mat-mdc-raised-button.mat-primary:not(:disabled) {
+  background-color: #1e3a5f !important;
+  background: #1e3a5f !important;
+}
+
+::ng-deep .submit-btn.mat-mdc-raised-button.mat-primary:hover {
+  background-color: #152a47 !important;
+  background: #152a47 !important;
+}
+
+::ng-deep .mat-mdc-form-field.mat-form-field-appearance-fill .mat-mdc-text-field-wrapper {
+  background-color: white;
+  border-radius: 12px;
+  border: 2px solid #e5e7eb;
+}
+
+::ng-deep .mat-mdc-form-field.mat-focused .mat-mdc-text-field-wrapper {
+  background-color: white;
+  border-color: #1e3a5f;
+  box-shadow: 0 0 0 4px rgba(30, 58, 95, 0.1);
+}
+
+::ng-deep .mat-mdc-form-field .mat-mdc-text-field-wrapper .mat-mdc-form-field-flex {
+  padding: 0.75rem 1rem;
+}
+
+::ng-deep .mat-mdc-form-field .mat-mdc-form-field-subscript-wrapper {
+  padding-top: 0.5rem;
+}
+
+::ng-deep .mat-mdc-form-field textarea {
+  line-height: 1.5;
+}
+
+::ng-deep .mat-mdc-form-field-has-textarea .mat-mdc-text-field-wrapper {
+  padding: 0 !important;
+}
+
+::ng-deep .mat-mdc-form-field-has-textarea .mat-mdc-text-field-wrapper .mat-mdc-form-field-flex {
+  padding: 0.75rem 1rem !important;
+  align-items: flex-start !important;
+}
+
+::ng-deep .mat-mdc-form-field-has-textarea .mat-mdc-form-field-prefix-wrapper {
+  padding-top: 0 !important;
+  align-self: flex-start !important;
+  line-height: 1.5 !important;
+  margin-top: 0 !important;
+}
+
+::ng-deep .mat-mdc-form-field-has-textarea .mat-mdc-form-field-prefix mat-icon {
+  font-size: 20px !important;
+  width: 20px !important;
+  height: 20px !important;
+  margin: 0 !important;
+  vertical-align: top !important;
+  transform: translateY(0.75rem) !important;
+}
+
+::ng-deep .mat-mdc-form-field-has-textarea textarea {
+  vertical-align: top;
+  line-height: 1.5 !important;
+  padding-top: 0.75rem !important;
+  padding-bottom: 0;
+  resize: vertical;
+  margin-top: 0 !important;
+}
+
+.form-section {
+  background: linear-gradient(135deg, #f9fafb 0%, #f3f4f6 100%);
+  padding: 1.25rem;
+  border-radius: 16px;
+  margin-bottom: 1rem;
+  border: 1px solid rgba(30, 58, 95, 0.15);
+  position: relative;
+  overflow: hidden;
+}
+
+.form-section::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 4px;
+  height: 100%;
+  background: linear-gradient(135deg, #1e3a5f 0%, #2d5a87 100%);
+}
+
+.section-title {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: #1e3a5f;
+  margin-bottom: 0.75rem;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.section-title mat-icon {
+  color: #1e3a5f;
+  font-size: 1.5rem;
+  width: 1.5rem;
+  height: 1.5rem;
+}
+
+label[for="fileInput"] {
+  display: inline-block;
+  font-size: 12px;
+  font-weight: 400;
+  color: rgba(0, 0, 0, 0.6);
+  margin-bottom: 0;
+  margin-top: -1.25px;
+}
+
+.file-upload-label {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 0.75rem !important;
+  padding: 0.75rem 1rem !important;
+  border: 2px dashed #d1d5db;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  background: #f9fafb;
+  width: 100%;
+  height: 56px;
+  box-sizing: border-box;
+}
+
+.file-upload-label mat-icon {
+  font-size: 20px !important;
+  width: 20px !important;
+  height: 20px !important;
+  color: #1e3a5f !important;
+}
+
+.file-upload-label span {
+  font-size: 0.875rem;
+}
+
+.file-upload-label:hover {
+  border-color: #1e3a5f;
+  background: #f3f4f6;
+}
+
+.file-upload-label mat-icon {
+  color: #1e3a5f;
+}
+
+.file-upload-label:active {
+  border-color: #1e3a5f;
+  background: #f0f4f8;
+}
+
+::ng-deep .textarea-field .mat-mdc-text-field-wrapper {
+    align-items: flex-start !important;
+}
+  
+::ng-deep .textarea-field .mat-mdc-form-field-icon-prefix {
+    align-self: flex-start !important;
+    margin-top: 16px !important; 
+}
+
+.logo-icon {
+  font-size: 48px !important;
+  width: 48px !important;
+  height: 48px !important;
+  color: #1e3a5f !important;
+}
+
+.page-header {
+  text-align: center;
+  margin-bottom: 1.5rem;
+  position: relative;
+  z-index: 2;
+}
+
+.header-logo-icon {
+  font-size: 64px !important;
+  width: 64px !important;
+  height: 64px !important;
+  color: rgba(255, 255, 255, 0.9) !important;
+}
+
+.page-title {
+  font-size: 2rem;
+  font-weight: 800;
+  color: white;
+  letter-spacing: -0.02em;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+.submit-btn {
+  font-size: 1rem;
+  font-weight: 700;
+  padding: 1rem 3rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  border-radius: 12px;
+  background: #1e3a5f !important;
+  color: white !important;
+  box-shadow: 0 8px 16px rgba(30, 58, 95, 0.3);
+}
+
+.submit-btn:not(:disabled) {
+  background: #1e3a5f !important;
+  background-color: #1e3a5f !important;
+}
+
+.submit-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  background: #9ca3af !important;
+  background-color: #9ca3af !important;
+  box-shadow: none;
+}
+
+@media (max-width: 640px) {
+  .submit-btn {
+    width: 100% !important;
+    min-height: 48px;
+    padding: 0.875rem 1rem;
+    font-size: 1rem;
+    border-radius: 14px;
+  }
+  .submit-btn mat-icon {
+    margin-right: 6px;
+  }
+}
+
+@media (max-width: 640px) {
+  .form-title { font-size: 1.25rem; margin-bottom: 0.75rem; }
+
+  .form-content {
+    padding: 1rem;
+    max-height: 82vh;
+    min-height: auto;
+  }
+
+  .form-section {
+    padding: 0.75rem;
+    margin-bottom: 0.75rem;
+    border-radius: 12px;
+  }
+
+  .form-section .grid { gap: 0.5rem; }
+
+  .file-upload-label { height: 48px; padding: 0.5rem 0.75rem !important; }
+
+  .form-content img { width: 72px !important; height: 72px !important; }
+
+  .form-content .mt-6 { margin-top: 0.75rem !important; }
+
+  ::ng-deep .mat-mdc-form-field .mat-mdc-text-field-wrapper .mat-mdc-form-field-flex {
+    padding: 0.5rem 0.75rem;
+  }
+
+  .textarea-field textarea { min-height: 72px; }
+}
+
+@media (max-width: 640px) {
+  .registration-container { padding: 0.5rem 0.75rem !important; }
+  .form-content { padding: 1rem; }
+  .form-section { padding: 0.75rem; }
+}
+
+/* Equalize top/bottom background space by centering the form */
+.registration-container { align-items: center; justify-content: center; padding-top: 0; padding-bottom: 0; }
+.form-card { max-height: 100vh; margin-top: 0; margin-bottom: 0; }
+
+/* Pin to viewport to prevent bottom gap lines on some devices */
+.registration-container { position: fixed; inset: 0; }
+
+/* Ensure internal scrolling is handled inside the card/content */
+.form-card { height: 100%; max-height: 100%; overflow: hidden; }
+.form-content { height: 100%; overflow-y: auto; }
+
+

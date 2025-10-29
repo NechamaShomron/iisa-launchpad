@@ -1,0 +1,210 @@
+<div class="min-h-screen bg-gray-100 py-8 px-4">
+  <div class="max-w-7xl mx-auto">
+    <!-- Header -->
+    <div class="mb-8 bg-space-gradient text-white rounded-lg shadow-lg p-8">
+      <div class="flex flex-col md:flex-row justify-between items-center">
+        <div>
+          <h1 class="text-4xl font-bold mb-2">IISA Management Dashboard</h1>
+          <p class="text-blue-200">Monitor and manage candidate registrations</p>
+        </div>
+        <button mat-raised-button color="accent" routerLink="/" class="mt-4 md:mt-0">
+          <mat-icon>add</mat-icon>
+          New Registration
+        </button>
+      </div>
+    </div>
+
+    @if (isLoading) {
+      <div class="flex justify-center items-center min-h-[400px]">
+        <mat-spinner diameter="60" strokeWidth="5" color="primary"></mat-spinner>
+      </div>
+    } @else {
+      <div class="flex flex-col gap-4">
+      <!-- Top row: four graphs -->
+      @if (!selectedCandidate) {
+        <div class="top-cards-grid grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 w-full">
+          <!-- Age Distribution -->
+          <mat-card class="stat-chart-card">
+            <mat-card-header>
+              <div class="flex items-center gap-2.5">
+                <mat-icon class="chart-icon">bar_chart</mat-icon>
+                <mat-card-title>Age Distribution</mat-card-title>
+            </div>
+            </mat-card-header>
+            <mat-card-content class="p-2">
+              <app-age-distribution [candidates]="candidates"></app-age-distribution>
+        </mat-card-content>
+      </mat-card>
+
+          <!-- Registration Trends -->
+          <mat-card class="stat-chart-card">
+            <mat-card-header>
+              <div class="flex items-center gap-2">
+                <mat-icon class="chart-icon">trending_up</mat-icon>
+                <mat-card-title>Registration Trends</mat-card-title>
+            </div>
+            </mat-card-header>
+            <mat-card-content class="p-1">
+              <div class="chart-surface" style="padding:4px">
+                <svg [attr.viewBox]="'0 0 ' + trendWidth + ' ' + trendHeight" class="trend-svg">
+                  <ng-container *ngFor="let tick of trendYTicks; let i = index">
+                    <line class="grid" [attr.x1]="trendPadding.left" [attr.x2]="trendWidth - trendPadding.right"
+                          [attr.y1]="trendPadding.top + (1 - tick / trendMax) * (trendHeight - trendPadding.top - trendPadding.bottom)"
+                          [attr.y2]="trendPadding.top + (1 - tick / trendMax) * (trendHeight - trendPadding.top - trendPadding.bottom)" />
+                  </ng-container>
+                  <path [attr.d]="trendArea" class="trend-area" />
+                  <path [attr.d]="trendPath" class="trend-line" />
+                  <ng-container *ngFor="let p of trendPoints; let i = index">
+                    <g class="trend-point-group"
+                       (mouseenter)="hoveredIndex = i"
+                       (mouseleave)="hoveredIndex = null">
+                      <circle class="trend-point" [attr.cx]="p.x" [attr.cy]="p.y" [attr.r]="trendPointRadius"
+                              [attr.data-index]="i">
+                        <title>{{ trendDateLabels[i] || '' }}: {{ p.value }} registered</title>
+                      </circle>
+                      @if (trendLabels[i]) {
+                        <text class="x-label"
+                              [class.x-label-always-visible]="trendShowLabel[i] && (hoveredIndex !== i || i === 0 || i === trendPoints.length - 1)"
+                              [class.x-label-hover-only]="!trendShowLabel[i] && (hoveredIndex !== i || i === 0 || i === trendPoints.length - 1)"
+                              [class.x-label-hovered]="hoveredIndex === i && i !== 0 && i !== trendPoints.length - 1"
+                              [attr.x]="(hoveredIndex === i && i !== 0 && i !== trendPoints.length - 1) ? trendWidth / 2 : (trendPadding.left + (trendWidth - trendPadding.left - trendPadding.right) / (trendPoints.length - 1 || 1) * i)"
+                              [attr.y]="trendHeight - 4"
+                              [attr.text-anchor]="(hoveredIndex === i && i !== 0 && i !== trendPoints.length - 1) ? 'middle' : (i === trendPoints.length - 1 ? 'end' : (i === 0 ? 'start' : 'middle'))">
+                          {{ trendLabels[i] }}
+                        </text>
+                      }
+                    </g>
+                  </ng-container>
+                </svg>
+          </div>
+        </mat-card-content>
+      </mat-card>
+
+          <!-- Registrations vs Visits -->
+          <mat-card class="stat-chart-card">
+            <mat-card-header>
+              <div class="flex items-center gap-2.5">
+                <mat-icon class="chart-icon">donut_small</mat-icon>
+                <mat-card-title>Registrations vs Visits</mat-card-title>
+            </div>
+            </mat-card-header>
+            <mat-card-content class="p-2">
+              <app-reg-visits-donut [totalRegistrations]="stats.totalRegistrations" [totalVisits]="stats.totalVisits">
+                <div class="text-sm leading-tight">
+                  <div class="legend-item mb-0"><span class="legend-dot" style="background-color:#3b82f6"></span> <span class="legend-text">{{ stats.totalRegistrations }} Registered</span></div>
+                  <div class="legend-item mt-0.5"><span class="legend-dot" style="background-color:#e5e7eb"></span> <span class="legend-text">{{ stats.totalVisits }} Visited</span></div>
+                </div>
+              </app-reg-visits-donut>
+        </mat-card-content>
+      </mat-card>
+
+          <!-- Map -->
+          <mat-card class="map-inline-card stat-chart-card">
+            <mat-card-content class="p-0">
+              <app-candidate-map [candidates]="candidates"></app-candidate-map>
+            </mat-card-content>
+      </mat-card>
+    </div>
+      }
+
+      <!-- Search + List -->
+      @if (!selectedCandidate) {
+        <div class="flex flex-col gap-3">
+          <!-- Search then Candidate List -->
+          <div class="w-full">
+            <!-- Search/Filters -->
+            @if (candidates.length > 1) {
+            <mat-card class="mb-6 w-full search-bar-card">
+              <mat-card-content class="search-bar-content">
+                <div class="grid grid-cols-1 md:grid-cols-5 gap-4 w-full">
+                  <!-- Full Name -->
+                  <div class="w-full">
+                    <label class="block text-[12px] font-semibold text-gray-600 mb-1.5 ml-1">Full Name</label>
+                    <input 
+                      matInput 
+                      placeholder="Search by name"
+                      [(ngModel)]="nameSearch"
+                      (ngModelChange)="onNameSearchChange($event)"
+                      class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm">
+                  </div>
+                  
+                  <!-- Email -->
+                  <div class="w-full">
+                    <label class="block text-[12px] font-semibold text-gray-600 mb-1.5 ml-1">Email</label>
+                    <input 
+                      matInput 
+                      type="email"
+                      placeholder="Search by email"
+                      [(ngModel)]="emailSearch"
+                      (ngModelChange)="onEmailSearchChange($event)"
+                      class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm">
+    </div>
+
+                  <!-- City/Region -->
+                  <div class="w-full">
+                    <label class="block text-[12px] font-semibold text-gray-600 mb-1.5 ml-1">City/Region</label>
+          <input 
+            matInput 
+                      placeholder="Search by city"
+                      [(ngModel)]="citySearch"
+                      (ngModelChange)="onCitySearchChange($event)"
+                      class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm">
+                  </div>
+                  
+                  <!-- Min Age -->
+                  <div class="w-full">
+                    <label class="block text-[12px] font-semibold text-gray-600 mb-1.5 ml-1">Min Age</label>
+          <input 
+            matInput 
+            type="number" 
+                      placeholder="Min"
+            [(ngModel)]="ageFilter.min"
+            (ngModelChange)="onAgeFilterChange(ageFilter.min, ageFilter.max)"
+                      class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm">
+                  </div>
+          
+                  <!-- Max Age -->
+                  <div class="w-full">
+                    <label class="block text-[12px] font-semibold text-gray-600 mb-1.5 ml-1">Max Age</label>
+          <input 
+            matInput 
+            type="number" 
+                      placeholder="Max"
+            [(ngModel)]="ageFilter.max"
+            (ngModelChange)="onAgeFilterChange(ageFilter.min, ageFilter.max)"
+                      class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm">
+                  </div>
+        </div>
+      </mat-card-content>
+    </mat-card>
+            }
+
+            <!-- Candidate List directly under Search -->
+            <div class="cards-pull-up">
+              <app-candidate-list [candidates]="filteredCandidates" [isLoading]="isLoading" (candidateSelected)="onCandidateSelected($event)"></app-candidate-list>
+            </div>
+          </div>
+        </div>
+    }
+
+    <!-- Candidate Detail View -->
+    @if (selectedCandidate) {
+        <div class="mt-0 px-6 py-6">
+          <button mat-raised-button (click)="goBackToList()" class="mb-4">
+          <mat-icon>arrow_back</mat-icon>
+          Back to List
+        </button>
+          <app-candidate-detail 
+            [candidate]="selectedCandidate"
+            [availableCandidates]="filteredCandidates"
+            (candidateDeleted)="handleCandidateDeleted()"
+            (goBack)="handleCandidateDeleted()">
+          </app-candidate-detail>
+        </div>
+      }
+      </div>
+    }
+  </div>
+</div>
+
+

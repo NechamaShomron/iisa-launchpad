@@ -1,0 +1,54 @@
+<div class="candidate-list-container">
+  <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+  @if (isLoading) {
+    <div class="col-span-full text-center py-12">
+      <mat-spinner diameter="40" strokeWidth="4" color="primary" style="margin: 0 auto;"></mat-spinner>
+    </div>
+  } @else if (candidates.length === 0) {
+    <div class="col-span-full text-center py-12 empty-state-container">
+      <mat-icon class="empty-state-icon">person_off</mat-icon>
+      <h3 class="text-xl font-semibold text-gray-600 mt-4">No candidates found</h3>
+      <p class="text-gray-500">Start by registering a new candidate</p>
+    </div>
+  } @else {
+    @for (candidate of candidates; track candidate.id) {
+      <mat-card class="card-animation cursor-pointer p-2" (click)="onSelectCandidate(candidate)">
+        <mat-card-content class="p-6">
+          <div class="flex items-center mb-4">
+            @if (candidate.profileImage) {
+              <img [src]="candidate.profileImage" 
+                   alt="{{ candidate.fullName }}" 
+                   class="w-16 h-16 rounded-full object-cover mr-4">
+            } @else {
+              <div class="w-16 h-16 rounded-full bg-blue-500 flex items-center justify-center text-white text-2xl font-bold mr-4">
+                {{ candidate.fullName.charAt(0) }}
+              </div>
+            }
+            <div>
+              <h3 class="text-lg font-bold text-space-blue">{{ candidate.fullName }}</h3>
+              <p class="text-sm text-gray-600">{{ candidate.age }} years old</p>
+            </div>
+          </div>
+          
+          <div class="space-y-2 mb-4">
+            <div class="flex items-center text-sm text-gray-600">
+              <mat-icon class="text-sm mr-2">location_city</mat-icon>
+              {{ candidate.city }}
+            </div>
+            <div class="flex items-center text-sm text-gray-600">
+              <mat-icon class="text-sm mr-2">email</mat-icon>
+              {{ candidate.email }}
+            </div>
+          </div>
+
+          <p class="text-sm text-gray-700 line-clamp-2">
+            {{ candidate.whyPerfect }}
+          </p>
+        </mat-card-content>
+      </mat-card>
+    }
+  }
+  </div>
+</div>
+
+
