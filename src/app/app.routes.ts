@@ -1,9 +1,13 @@
 import { Routes } from '@angular/router';
-import { RegistrationFormComponent } from './components/registration-form/registration-form.component';
-import { DashboardComponent } from './components/dashboard/dashboard.component';
 
 export const routes: Routes = [
-  { path: '', component: RegistrationFormComponent },
-  { path: 'dashboard', component: DashboardComponent },
+  {
+    path: '',
+    loadChildren: () => import('./features/landing/landing.module').then(m => m.LandingModule)
+  },
+  {
+    path: 'dashboard',
+    loadChildren: () => import('./features/dashboard/dashboard.module').then(m => m.DashboardModule)
+  },
   { path: '**', redirectTo: '' }
 ];

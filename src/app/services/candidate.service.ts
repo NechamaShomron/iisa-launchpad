@@ -1,15 +1,18 @@
 import { Injectable } from '@angular/core';
 import { BehaviorSubject, Observable, Subject } from 'rxjs';
+import { Database, ref, onValue, set, update, remove, get, push } from '@angular/fire/database';
 import { Candidate, VisitStats } from '../models/candidate.model';
 
 @Injectable({
   providedIn: 'root'
 })
 export class CandidateService {
-  private candidatesKey = 'iisa_candidates';
-  private visitsKey = 'iisa_visits';
+  private candidatesPath = 'candidates';
+  private visitsPath = 'visits';
   private candidatesSubject = new BehaviorSubject<Candidate[]>([]);
   public candidates$ = this.candidatesSubject.asObservable();
+  private visitsSubject = new BehaviorSubject<number>(0);
+  public visits$ = this.visitsSubject.asObservable();
   
   // Event subjects for specific actions
   private candidateAdded$ = new Subject<Candidate>();
@@ -21,9 +24,39 @@ export class CandidateService {
   public onCandidateUpdated$ = this.candidateUpdated$.asObservable();
   public onCandidateDeleted$ = this.candidateDeleted$.asObservable();
 
-  constructor() {
-    this.loadCandidates();
+  constructor(private db: Database) {
+    this.setupFirebaseListeners();
     this.incrementVisit();
+  }
+
+  private setupFirebaseListeners(): void {
+    // Listen to candidates changes
+    const candidatesRef = ref(this.db, this.candidatesPath);
+    onValue(candidatesRef, (snapshot) => {
+      const data = snapshot.val();
+      if (data) {
+        // Convert Firebase object to array and parse dates
+        const candidates = Object.keys(data).map(key => {
+          const candidate = data[key];
+          return {
+            ...candidate,
+            id: key,
+            registrationDate: candidate.registrationDate ? new Date(candidate.registrationDate) : new Date(),
+            lastUpdated: candidate.lastUpdated ? new Date(candidate.lastUpdated) : new Date()
+          } as Candidate;
+        });
+        this.candidatesSubject.next(candidates);
+      } else {
+        this.candidatesSubject.next([]);
+      }
+    });
+
+    // Listen to visits count
+    const visitsRef = ref(this.db, this.visitsPath);
+    onValue(visitsRef, (snapshot) => {
+      const count = snapshot.val() || 0;
+      this.visitsSubject.next(count);
+    });
   }
 
   getCandidates(): Candidate[] {
@@ -38,28 +71,90 @@ export class CandidateService {
     return this.candidatesSubject.value.find(c => c.id === id);
   }
 
-  addCandidate(candidate: Candidate): void {
-    const candidates = [...this.candidatesSubject.value, candidate];
-    this.saveCandidates(candidates);
-    this.candidatesSubject.next(candidates);
-    this.candidateAdded$.next(candidate);
+  async addCandidate(candidate: Candidate): Promise<void> {
+    try {
+      // Convert dates to ISO strings for Firebase
+      const candidateData = {
+        fullName: candidate.fullName,
+        email: candidate.email,
+        phone: candidate.phone,
+        age: candidate.age,
+        city: candidate.city,
+        hobbies: candidate.hobbies,
+        whyPerfect: candidate.whyPerfect,
+        profileImage: candidate.profileImage,
+        registrationDate: candidate.registrationDate instanceof Date 
+          ? candidate.registrationDate.toISOString() 
+          : new Date().toISOString(),
+        lastUpdated: new Date().toISOString()
+      };
+      
+      // Push to Firebase - this will generate a unique key
+      const candidatesRef = ref(this.db, this.candidatesPath);
+      const newRef = push(candidatesRef);
+      await set(newRef, candidateData);
+      
+      // The listener will update the subject automatically with the new ID from Firebase
+      // Emit a temporary event (the listener will update the actual candidate with the ID)
+      this.candidateAdded$.next(candidate);
+    } catch (error) {
+      console.error('Error adding candidate to Firebase:', error);
+      throw error;
+    }
   }
 
-  updateCandidate(candidate: Candidate): void {
-    const updatedCandidate = { ...candidate, lastUpdated: new Date() };
-    const candidates = this.candidatesSubject.value.map(c =>
-      c.id === candidate.id ? updatedCandidate : c
-    );
-    this.saveCandidates(candidates);
-    this.candidatesSubject.next(candidates);
-    this.candidateUpdated$.next(updatedCandidate);
+  async updateCandidate(candidate: Candidate): Promise<void> {
+    try {
+      if (!candidate.id) {
+        throw new Error('Candidate ID is required for update');
+      }
+
+      const updateData = {
+        fullName: candidate.fullName,
+        email: candidate.email,
+        phone: candidate.phone,
+        age: candidate.age,
+        city: candidate.city,
+        hobbies: candidate.hobbies,
+        whyPerfect: candidate.whyPerfect,
+        profileImage: candidate.profileImage,
+        registrationDate: candidate.registrationDate instanceof Date 
+          ? candidate.registrationDate.toISOString() 
+          : new Date(candidate.registrationDate).toISOString(),
+        lastUpdated: new Date().toISOString()
+      };
+      
+      const candidateRef = ref(this.db, `${this.candidatesPath}/${candidate.id}`);
+      await update(candidateRef, updateData);
+      
+      // The listener will update the subject automatically
+      // Emit the original candidate object (not the Firebase data with strings)
+      const updatedCandidate = {
+        ...candidate,
+        lastUpdated: new Date()
+      };
+      this.candidateUpdated$.next(updatedCandidate);
+    } catch (error) {
+      console.error('Error updating candidate in Firebase:', error);
+      throw error;
+    }
   }
 
-  deleteCandidate(id: string): void {
-    const candidates = this.candidatesSubject.value.filter(c => c.id !== id);
-    this.saveCandidates(candidates);
-    this.candidatesSubject.next(candidates);
-    this.candidateDeleted$.next(id);
+  async deleteCandidate(id: string): Promise<void> {
+    try {
+      if (!id) {
+        throw new Error('Candidate ID is required for deletion');
+      }
+
+      const candidateRef = ref(this.db, `${this.candidatesPath}/${id}`);
+      await remove(candidateRef);
+      
+      // The listener will update the subject automatically
+      this.candidateDeleted$.next(id);
+    } catch (error) {
+      console.error('Error deleting candidate from Firebase:', error);
+      throw error;
+    }
   }
 
   searchCandidates(query: string): Candidate[] {
@@ -80,7 +175,7 @@ export class CandidateService {
   }
 
   getStats(): VisitStats {
-    const totalVisits = parseInt(localStorage.getItem(this.visitsKey) || '0');
+    const totalVisits = this.visitsSubject.value;
     const totalRegistrations = this.candidatesSubject.value.length;
     const conversionRate = totalVisits > 0 ? (totalRegistrations / totalVisits) * 100 : 0;
 
@@ -91,24 +186,18 @@ export class CandidateService {
     };
   }
 
-  private incrementVisit(): void {
-    const current = parseInt(localStorage.getItem(this.visitsKey) || '0');
-    localStorage.setItem(this.visitsKey, (current + 1).toString());
-  }
-
-  private loadCandidates(): void {
-    const stored = localStorage.getItem(this.candidatesKey);
-    if (stored) {
-      const candidates = JSON.parse(stored).map((c: any) => ({
-        ...c,
-        registrationDate: new Date(c.registrationDate),
-        lastUpdated: new Date(c.lastUpdated)
-      }));
-      this.candidatesSubject.next(candidates);
+  private async incrementVisit(): Promise<void> {
+    try {
+      const visitsRef = ref(this.db, this.visitsPath);
+      const snapshot = await get(visitsRef);
+      const currentCount = snapshot.val() || 0;
+      await set(visitsRef, currentCount + 1);
+    } catch (error) {
+      console.error('Error incrementing visit count:', error);
+      // Fallback to localStorage if Firebase fails
+      const visitsKey = 'iisa_visits';
+      const current = parseInt(localStorage.getItem(visitsKey) || '0');
+      localStorage.setItem(visitsKey, (current + 1).toString());
     }
-  }
-
-  private saveCandidates(candidates: Candidate[]): void {
-    localStorage.setItem(this.candidatesKey, JSON.stringify(candidates));
   }
 }

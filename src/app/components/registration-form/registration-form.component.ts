@@ -176,42 +176,65 @@ export class RegistrationFormComponent implements OnInit {
     }
   }
 
-  onSubmit(): void {
+  async onSubmit(): Promise<void> {
     if (this.registrationForm.valid) {
       const formValue = this.registrationForm.value;
-      const candidate: Candidate = {
-        id: this.editingCandidate?.id || this.generateId(),
-        fullName: formValue.fullName,
-        email: formValue.email,
-        phone: formValue.phone,
-        age: formValue.age,
-        city: formValue.city,
-        hobbies: formValue.hobbies,
-        whyPerfect: formValue.whyPerfect,
-        profileImage: formValue.profileImage,
-        registrationDate: this.editingCandidate?.registrationDate || new Date(),
-        lastUpdated: new Date()
-      };
+      
+      try {
+        if (this.editingCandidate) {
+          // Update existing candidate
+          const candidate: Candidate = {
+            id: this.editingCandidate.id,
+            fullName: formValue.fullName,
+            email: formValue.email,
+            phone: formValue.phone,
+            age: formValue.age,
+            city: formValue.city,
+            hobbies: formValue.hobbies,
+            whyPerfect: formValue.whyPerfect,
+            profileImage: formValue.profileImage,
+            registrationDate: this.editingCandidate.registrationDate,
+            lastUpdated: new Date()
+          };
+          await this.candidateService.updateCandidate(candidate);
+          this.snackBar.open('Registration updated successfully!', 'Close', {
+            duration: 3000,
+            panelClass: ['success-snackbar']
+          });
+          localStorage.removeItem('editCandidateId');
+        } else {
+          // Add new candidate (no ID - Firebase will generate it)
+          const candidate: Candidate = {
+            id: '', // Empty ID - Firebase will generate one
+            fullName: formValue.fullName,
+            email: formValue.email,
+            phone: formValue.phone,
+            age: formValue.age,
+            city: formValue.city,
+            hobbies: formValue.hobbies,
+            whyPerfect: formValue.whyPerfect,
+            profileImage: formValue.profileImage,
+            registrationDate: new Date(),
+            lastUpdated: new Date()
+          };
+          await this.candidateService.addCandidate(candidate);
+          this.snackBar.open('Registration submitted successfully!', 'Close', {
+            duration: 3000,
+            panelClass: ['success-snackbar']
+          });
+        }
 
-      if (this.editingCandidate) {
-        this.candidateService.updateCandidate(candidate);
-        this.snackBar.open('Registration updated successfully!', 'Close', {
+        // Redirect to dashboard
+        setTimeout(() => {
+          window.location.href = '/dashboard';
+        }, 1500);
+      } catch (error) {
+        console.error('Error saving candidate:', error);
+        this.snackBar.open('Error saving registration. Please try again.', 'Close', {
           duration: 3000,
-          panelClass: ['success-snackbar']
-        });
-        localStorage.removeItem('editCandidateId');
-      } else {
-        this.candidateService.addCandidate(candidate);
-        this.snackBar.open('Registration submitted successfully!', 'Close', {
-          duration: 3000,
-          panelClass: ['success-snackbar']
+          panelClass: ['error-snackbar']
         });
       }
-
-      // Redirect to dashboard
-      setTimeout(() => {
-        window.location.href = '/dashboard';
-      }, 1500);
     } else {
       this.markFormGroupTouched();
       this.snackBar.open('Please fill in all required fields correctly', 'Close', {

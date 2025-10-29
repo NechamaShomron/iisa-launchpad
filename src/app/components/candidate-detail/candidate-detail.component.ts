@@ -67,10 +67,15 @@ export class CandidateDetailComponent implements OnInit, OnChanges {
     }
   }
 
-  deleteCandidate(): void {
+  async deleteCandidate(): Promise<void> {
     if (confirm('Are you sure you want to delete this candidate?')) {
-      this.candidateService.deleteCandidate(this.candidate!.id);
-      this.candidateDeleted.emit();
+      try {
+        await this.candidateService.deleteCandidate(this.candidate!.id);
+        this.candidateDeleted.emit();
+      } catch (error) {
+        console.error('Error deleting candidate:', error);
+        alert('Error deleting candidate. Please try again.');
+      }
     }
   }
 
