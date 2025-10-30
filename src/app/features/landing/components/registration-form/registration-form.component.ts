@@ -85,6 +85,13 @@ export class RegistrationFormComponent implements OnInit {
   }
 
   ngOnInit(): void {
+    // Always reset edit state when not explicitly entering edit mode via queryparam
+    const qpEditId = this.route.snapshot.queryParamMap.get('editId');
+    if (!qpEditId) {
+      sessionStorage.removeItem('editCandidateId');
+      this.editingCandidate = undefined;
+    }
+
     // Initialize filtered lists and wire up filtering
     const cityCtrl = this.registrationForm.get('city');
     this.filteredCities = [...this.cities];
@@ -98,14 +105,12 @@ export class RegistrationFormComponent implements OnInit {
     // Clear edit state if user navigates directly to registration (not from edit)
     // This prevents conflicts if multiple users are registering simultaneously
     // Prefer query param for per-tab, per-navigation scoping
-    const qpEditId = this.route.snapshot.queryParamMap.get('editId');
-    if (qpEditId) {
-      sessionStorage.setItem('editCandidateId', qpEditId);
-    }
     const editCandidateId = sessionStorage.getItem('editCandidateId');
     if (!editCandidateId) {
       // No edit state - this is a fresh registration
       this.editingCandidate = undefined;
+      this.registrationForm.reset();
+      this.previewImage = undefined;
     }
 
     // Subscribe to candidates$ to wait for Firebase data to load before checking for editing

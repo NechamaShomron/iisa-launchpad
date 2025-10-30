@@ -567,7 +567,7 @@ label[for="fileInput"] {
 
   .form-content {
     padding: 1rem;
-    max-height: 82vh;
+    max-height: 100vh;
     min-height: auto;
   }
 
@@ -608,5 +608,56 @@ label[for="fileInput"] {
 /* Ensure internal scrolling is handled inside the card/content */
 .form-card { height: 100%; max-height: 100%; overflow: hidden; }
 .form-content { height: 100%; overflow-y: auto; }
+
+.textarea-field textarea {
+  width: 100%;
+  min-height: 96px;
+  max-height: 200px;
+  resize: vertical;
+  box-sizing: border-box;
+  overflow: auto;
+}
+@media (max-width: 640px) {
+  .textarea-field textarea {
+    width: 100% !important;
+    min-height: 72px;
+    max-height: 160px;
+    font-size: 1rem;
+    resize: vertical;
+    box-sizing: border-box;
+  }
+}
+
+@media (max-width: 640px) {
+  .form-card {
+    width: 97vw !important;
+    height: 97vh !important;
+    min-width: 0 !important;
+    min-height: 0 !important;
+    margin: 0 !important;
+    box-sizing: border-box;
+    border-radius: 0 !important;
+    display: flex;
+    flex-direction: column;
+    max-width: 100%;
+  }
+  .form-content {
+    flex: 1 1 auto;
+    height: 100%;
+    overflow-y: auto;
+    min-height: 0;
+  }
+}
+
+@media (max-width: 640px) {
+  ::ng-deep .mat-mdc-floating-label,
+  ::ng-deep .mat-mdc-floating-label--float-above {
+    font-size: 0.85rem !important;
+    max-width: 100% !important;
+    overflow-wrap: break-word !important;
+    white-space: normal !important;
+    display: block;
+  }
+}
 
 

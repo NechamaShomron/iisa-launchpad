@@ -3,7 +3,7 @@
     <mat-spinner diameter="60" strokeWidth="5" color="primary"></mat-spinner>
   </div>
 } @else if (candidate) {
-  <div class="max-w-4xl mx-auto px-4">
+  <div class="w-full max-w-none md:max-w-4xl mx-auto px-1 sm:px-2 md:px-4">
     <mat-card>
       <mat-card-content class="p-8" style="padding: 3% !important;">
         <!-- Header -->
@@ -41,23 +41,23 @@
           }
           
           <div class="flex-1">
-            <h1 class="text-4xl font-bold text-space-blue mb-4">{{ candidate.fullName }}</h1>
-            <div class="grid grid-cols-2 gap-4">
-              <div>
+            <h1 class="text-4xl font-bold text-space-blue mb-4 break-words">{{ candidate.fullName }}</h1>
+            <div class="grid grid-cols-2 gap-3 md:gap-4">
+              <div class="min-w-0">
                 <p class="text-gray-600 mb-1">Age</p>
-                <p class="text-lg font-semibold">{{ candidate.age }} years</p>
+                <p class="text-lg font-semibold break-words">{{ candidate.age }}</p>
               </div>
-              <div>
+              <div class="min-w-0">
                 <p class="text-gray-600 mb-1">Location</p>
-                <p class="text-lg font-semibold">{{ candidate.city }}</p>
+                <p class="text-lg font-semibold break-words">{{ candidate.city }}</p>
               </div>
-              <div>
+              <div class="min-w-0">
                 <p class="text-gray-600 mb-1">Email</p>
-                <p class="text-lg font-semibold">{{ candidate.email }}</p>
+                <p class="text-lg font-semibold break-words">{{ candidate.email }}</p>
               </div>
-              <div>
+              <div class="min-w-0">
                 <p class="text-gray-600 mb-1">Phone</p>
-                <p class="text-lg font-semibold">{{ candidate.phone }}</p>
+                <p class="text-lg font-semibold break-words">{{ candidate.phone }}</p>
               </div>
             </div>
           </div>
@@ -66,24 +66,24 @@
         <!-- Hobbies -->
         <div class="mb-8">
           <h2 class="text-2xl font-bold text-space-blue mb-3">Hobbies</h2>
-          <p class="text-gray-700">{{ candidate.hobbies }}</p>
+          <p class="text-gray-700 break-words">{{ candidate.hobbies }}</p>
         </div>
 
         <!-- Why Perfect -->
         <div class="mb-8">
           <h2 class="text-2xl font-bold text-space-blue mb-3">Why I'm the Perfect Candidate</h2>
-          <p class="text-gray-700 leading-relaxed">{{ candidate.whyPerfect }}</p>
+          <p class="text-gray-700 leading-relaxed break-words">{{ candidate.whyPerfect }}</p>
         </div>
 
         <!-- Registration Info -->
-        <div class="border-t pt-6 grid grid-cols-2 gap-4">
-          <div>
+        <div class="border-t pt-6 grid grid-cols-2 gap-3 md:gap-4">
+          <div class="min-w-0">
             <p class="text-gray-600 mb-1">Registration Date</p>
-            <p class="text-sm font-semibold">{{ candidate.registrationDate | date:'medium' }}</p>
+            <p class="text-sm font-semibold break-words">{{ candidate.registrationDate | date:'medium' }}</p>
           </div>
-          <div>
+          <div class="min-w-0">
             <p class="text-gray-600 mb-1">Last Updated</p>
-            <p class="text-sm font-semibold">{{ candidate.lastUpdated | date:'medium' }}</p>
+            <p class="text-sm font-semibold break-words">{{ candidate.lastUpdated | date:'medium' }}</p>
           </div>
         </div>
       </mat-card-content>

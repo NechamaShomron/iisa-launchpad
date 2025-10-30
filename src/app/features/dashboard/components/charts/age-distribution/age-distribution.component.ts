@@ -18,6 +18,7 @@ export class AgeDistributionComponent implements OnInit, OnChanges {
   ageBarHeight = 180;
   ageBarPadding = { top: 12, right: 12, bottom: 64, left: 24 } as any;
   ageBars: Array<{ x: number; y: number; width: number; height: number; label: string; value: number }> = [];
+  xLabelOffset = 0;
 
   ngOnInit(): void {
     this.updateResponsiveSizes();
@@ -81,15 +82,18 @@ export class AgeDistributionComponent implements OnInit, OnChanges {
     if (vw < 640) {
       this.ageBarWidth = 240;
       this.ageBarHeight = 160;
-      this.ageBarPadding = { top: 20, right: 12, bottom: 66, left: 20 } as any;
+      this.ageBarPadding = { top: 20, right: 12, bottom: 66, left: 24 } as any;
+      this.xLabelOffset = 10;
     } else if (vw < 1024) {
       this.ageBarWidth = 280;
       this.ageBarHeight = 170;
       this.ageBarPadding = { top: 16, right: 12, bottom: 66, left: 22 } as any;
+      this.xLabelOffset = 4;
     } else {
       this.ageBarWidth = 320;
       this.ageBarHeight = 180;
       this.ageBarPadding = { top: 12, right: 12, bottom: 70, left: 24 } as any;
+      this.xLabelOffset = 0;
     }
   }
 }

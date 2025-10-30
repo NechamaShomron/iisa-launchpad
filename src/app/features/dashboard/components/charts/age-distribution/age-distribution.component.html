@@ -9,7 +9,7 @@
       <rect class="bar" [attr.x]="b.x" [attr.y]="b.y" [attr.width]="b.width" [attr.height]="b.height" [attr.fill]="ageColors[i]" />
     </ng-container>
     <ng-container *ngFor="let b of ageBars; let i = index">
-      <text class="x-label" [attr.transform]="'translate(' + (b.x + b.width/2 - 12) + ',' + (ageBarHeight - 30) + ') rotate(-45)'" text-anchor="middle">{{ b.label }}</text>
+      <text class="x-label" [attr.transform]="'translate(' + (b.x + b.width/2 - 12 + xLabelOffset) + ',' + (ageBarHeight - 30) + ') rotate(-45)'" text-anchor="middle">{{ b.label }}</text>
     </ng-container>
   </svg>
 </div>
