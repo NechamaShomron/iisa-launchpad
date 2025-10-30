@@ -13,6 +13,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatAutocompleteModule } from '@angular/material/autocomplete';
 import { MatOptionModule } from '@angular/material/core';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { Router } from '@angular/router';
 
 @Component({
   selector: 'app-registration-form',
@@ -70,7 +71,8 @@ export class RegistrationFormComponent implements OnInit {
     private candidateService: CandidateService,
     private snackBar: MatSnackBar,
     private cdr: ChangeDetectorRef,
-    private route: ActivatedRoute
+    private route: ActivatedRoute,
+    private router: Router
   ) {
     this.registrationForm = this.fb.group({
       fullName: ['', [Validators.required, Validators.minLength(2)]],
@@ -168,7 +170,7 @@ export class RegistrationFormComponent implements OnInit {
         if (daysDiff >= 3) {
           // Registration is too old to edit, redirect back to dashboard
           sessionStorage.removeItem('editCandidateId');
-          window.location.href = '/dashboard';
+          this.router.navigate(['/dashboard']);
           return;
         }
         
@@ -264,7 +266,7 @@ export class RegistrationFormComponent implements OnInit {
             });
             sessionStorage.removeItem('editCandidateId');
             setTimeout(() => {
-              window.location.href = '/dashboard';
+              this.router.navigate(['/dashboard']);
             }, 1500);
             return;
           }
@@ -281,7 +283,7 @@ export class RegistrationFormComponent implements OnInit {
             });
             localStorage.removeItem('editCandidateId');
             setTimeout(() => {
-              window.location.href = '/dashboard';
+              this.router.navigate(['/dashboard']);
             }, 1500);
             return;
           }
@@ -333,7 +335,7 @@ export class RegistrationFormComponent implements OnInit {
 
         // Redirect to dashboard
         setTimeout(() => {
-          window.location.href = '/dashboard';
+          this.router.navigate(['/dashboard']);
         }, 1500);
       } catch (error) {
         console.error('Error saving candidate:', error);

@@ -1,6 +1,6 @@
 {
   "hosting": {
-    "public": "dist/iisa-launchpad",
+    "public": "dist/iisa-launchpad/browser",
     "ignore": [
       "firebase.json",
       "**/.*",
