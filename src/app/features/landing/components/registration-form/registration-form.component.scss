@@ -631,15 +631,18 @@ label[for="fileInput"] {
 @media (max-width: 640px) {
   .form-card {
     width: 97vw !important;
-    height: 97vh !important;
+    /* Reduce height a bit so background is visible around the card */
+    height: calc(97vh - 32px) !important;
     min-width: 0 !important;
     min-height: 0 !important;
-    margin: 0 !important;
+    /* Show blue background above and below the card */
+    margin: 12px 0 !important;
     box-sizing: border-box;
     border-radius: 0 !important;
     display: flex;
     flex-direction: column;
     max-width: 100%;
+    /* Ensure bottom of button isn't cut off */
     padding-bottom: 20px;
   }
   .form-content {
@@ -647,6 +650,7 @@ label[for="fileInput"] {
     height: 100%;
     overflow-y: auto;
     min-height: 0;
+    /* space for easily visible button */
     padding-bottom: 1.5rem !important;
   }
 }
@@ -659,6 +663,13 @@ label[for="fileInput"] {
     overflow-wrap: break-word !important;
     white-space: normal !important;
     display: block;
+  }
+}
+
+/* Add safe-area padding for devices with bottom insets */
+@media (max-width: 640px) {
+  .registration-container {
+    padding-bottom: calc(0.5rem + env(safe-area-inset-bottom, 0)) !important;
   }
 }
 
