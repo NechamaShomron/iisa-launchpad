@@ -5,7 +5,7 @@ import { provideAuth, getAuth } from '@angular/fire/auth';
 import { provideStorage, getStorage } from '@angular/fire/storage';
 import { provideDatabase, getDatabase } from '@angular/fire/database';
 
-import { environment } from '../../../environment';
+import { environment } from '../../environments/environment';
 
 /**
  * FirebaseModule centralizes all Firebase providers.

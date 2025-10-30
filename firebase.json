@@ -1,16 +1,16 @@
 {
   "hosting": {
-    "public": "dist/iisa-launchpad/browser",
+    "public": "dist/iisa-launchpad",
     "ignore": [
       "firebase.json",
       "**/.*",
       "**/node_modules/**"
     ],
-    "cleanUrls": true,
     "rewrites": [
-      { "source": "**", "destination": "/index.html" }
+      {
+        "source": "**",
+        "destination": "/index.html"
+      }
     ]
   }
 }
-
-
