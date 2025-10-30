@@ -85,11 +85,14 @@ export class RegistrationFormComponent implements OnInit {
   }
 
   ngOnInit(): void {
-    // Always reset edit state when not explicitly entering edit mode via queryparam
     const qpEditId = this.route.snapshot.queryParamMap.get('editId');
-    if (!qpEditId) {
+    if (qpEditId) {
+      sessionStorage.setItem('editCandidateId', qpEditId);
+    } else {
       sessionStorage.removeItem('editCandidateId');
       this.editingCandidate = undefined;
+      this.registrationForm.reset();
+      this.previewImage = undefined;
     }
 
     // Initialize filtered lists and wire up filtering
@@ -151,6 +154,8 @@ export class RegistrationFormComponent implements OnInit {
   }
 
   checkIfEditing(): void {
+    const qpEditId = this.route.snapshot.queryParamMap.get('editId');
+    if (!qpEditId) return;
     const candidateId = sessionStorage.getItem('editCandidateId');
     if (candidateId) {
       const candidate = this.candidateService.getCandidateById(candidateId);
