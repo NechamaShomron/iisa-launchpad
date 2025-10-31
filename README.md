@@ -51,7 +51,7 @@ To make it work locally, you need to create your own Firebase project and link i
 3. In your local Angular project, create the file:
 
    ```
-   `src/environments/environment.ts` in the root of the project (next to package.json)
+   `src/environments/environment.ts`
 
    ```
 
