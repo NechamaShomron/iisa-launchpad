@@ -1,12 +1,81 @@
 :host {
   display: block;
+  width: 100%;
+  height: 100%;
 }
 
-@media (max-width: 767px) {
-  .trend-card {
-    padding-top: 0 !important;
-    margin-top: -6px; // raise the content slightly on mobile
-  }
+.trend-svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  max-width: 100%;
+  background: transparent;
+}
+
+// Chart styles - ensure these apply with proper specificity
+:host ::ng-deep .trend-svg .grid,
+.trend-svg .grid {
+  stroke: #e5e7eb !important;
+  stroke-width: 1 !important;
+}
+
+:host ::ng-deep .trend-svg .trend-area,
+.trend-svg .trend-area {
+  fill: #3b82f6 !important;
+  opacity: 0.2 !important;
+}
+
+:host ::ng-deep .trend-svg .trend-line,
+.trend-svg .trend-line {
+  fill: none !important;
+  stroke: #3b82f6 !important;
+  stroke-width: 2 !important;
+}
+
+:host ::ng-deep .trend-svg .trend-point,
+.trend-svg .trend-point {
+  fill: #3b82f6 !important;
+  cursor: pointer;
+}
+
+:host ::ng-deep .trend-svg .x-label,
+.trend-svg .x-label {
+  font-size: 11px;
+  fill: #6b7280 !important;
+  font-weight: 500;
+}
+
+// Label visibility states
+.trend-svg .x-label-always-visible {
+  opacity: 1;
+  visibility: visible;
+}
+
+.trend-svg .x-label-hover-only {
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.2s ease, visibility 0.2s ease;
+}
+
+.trend-point-group:hover .x-label-hover-only {
+  opacity: 1;
+  visibility: visible;
+}
+
+.trend-svg .x-label-hovered {
+  font-weight: 600 !important;
+  fill: #1e3a5f !important;
+  font-size: 12px !important;
+  opacity: 1 !important;
+  visibility: visible !important;
+  transition: all 0.2s ease;
+}
+
+:host ::ng-deep .trend-svg .y-label,
+.trend-svg .y-label {
+  font-size: 10px;
+  fill: #6b7280 !important;
+  font-weight: 500;
 }
 
 

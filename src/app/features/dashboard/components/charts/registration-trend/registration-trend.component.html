@@ -1,28 +1,45 @@
-<div class="trend-card">
-  <div class="trend-title">Registration Trends</div>
-  <svg [attr.viewBox]="'0 0 ' + width + ' ' + height" class="trend-svg">
-    <path [attr.d]="areaD" class="area" />
-    <path [attr.d]="pathD" class="line" />
-    <ng-container *ngIf="values.length > 0">
-      <ng-container *ngFor="let v of values; let i = index">
-        <circle class="point"
-                [attr.cx]="(padding.left + (width - padding.left - padding.right) / (values.length - 1 || 1) * i)"
-                [attr.cy]="(padding.top + (1 - v / Math.max(1, ...values)) * (height - padding.top - padding.bottom))"
-                r="3" />
-      </ng-container>
-    </ng-container>
-    <ng-container *ngFor="let lbl of labels; let i = index">
-      <text class="x-label"
-            [attr.x]="(padding.left + (width - padding.left - padding.right) / (values.length - 1 || 1) * i)"
-            [attr.y]="height - 6" text-anchor="middle">{{ lbl }}</text>
-    </ng-container>
-    <ng-container *ngFor="let t of yTicks; let i = index">
-      <line class="grid" [attr.x1]="padding.left" [attr.x2]="width - padding.right"
-            [attr.y1]="padding.top + (1 - t / yTicks[yTicks.length-1]) * (height - padding.top - padding.bottom)"
-            [attr.y2]="padding.top + (1 - t / yTicks[yTicks.length-1]) * (height - padding.top - padding.bottom)" />
-      <text class="y-label" [attr.x]="8" [attr.y]="padding.top + (1 - t / yTicks[yTicks.length-1]) * (height - padding.top - padding.bottom) + 4">{{ t }}</text>
-    </ng-container>
-  </svg>
-</div>
+<svg [attr.viewBox]="'0 0 ' + width + ' ' + height" 
+     [attr.width]="width" 
+     [attr.height]="height" 
+     class="trend-svg">
+  <!-- Grid lines -->
+  <ng-container *ngFor="let gridLine of gridLines">
+    <line class="grid" [attr.x1]="padding.left" [attr.x2]="width - padding.right"
+          [attr.y1]="gridLine.y1" [attr.y2]="gridLine.y2" />
+    <text class="y-label" [attr.x]="8" [attr.y]="gridLine.labelY">{{ gridLine.value }}</text>
+  </ng-container>
+  
+  <!-- Area fill -->
+  <path *ngIf="areaD" [attr.d]="areaD" class="trend-area" />
+  
+  <!-- Line path -->
+  <path *ngIf="pathD" [attr.d]="pathD" class="trend-line" />
+  
+  <!-- Data points with hover groups -->
+  <ng-container *ngFor="let point of points; let i = index">
+    <g class="trend-point-group"
+       (mouseenter)="hoveredIndex = i"
+       (mouseleave)="hoveredIndex = null">
+      <circle class="trend-point" [attr.cx]="point.x" [attr.cy]="point.y" r="2" />
+      <!-- X-axis label for this point -->
+      <!-- First and last labels always visible at their positions -->
+      <text *ngIf="labels[i] && showLabel[i]" 
+            class="x-label x-label-always-visible"
+            [attr.x]="labelPositions[i].x"
+            [attr.y]="labelPositions[i].y"
+            [attr.text-anchor]="(i === points.length - 1 ? 'end' : 'start')">
+        {{ labels[i] }}
+      </text>
+      <!-- Hovered label for non-first/last points - appears only when hovered -->
+      <text *ngIf="labels[i] && !showLabel[i] && hoveredIndex === i" 
+            class="x-label x-label-hovered"
+            [attr.x]="width / 2"
+            [attr.y]="labelPositions[i].y"
+            text-anchor="middle">
+        {{ labels[i] }}
+      </text>
+    </g>
+  </ng-container>
+</svg>
 
 

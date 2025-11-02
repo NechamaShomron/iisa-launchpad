@@ -1,4 +1,4 @@
-import { Component, Input, OnChanges, SimpleChanges } from '@angular/core';
+import { Component, Input, OnInit, OnChanges, SimpleChanges } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Candidate } from '../../../../../models/candidate.model';
 
@@ -9,7 +9,7 @@ import { Candidate } from '../../../../../models/candidate.model';
   templateUrl: './registration-trend.component.html',
   styleUrl: './registration-trend.component.scss'
 })
-export class RegistrationTrendComponent implements OnChanges {
+export class RegistrationTrendComponent implements OnInit, OnChanges {
   @Input() candidates: Candidate[] = [];
 
   labels: string[] = [];
@@ -17,10 +17,21 @@ export class RegistrationTrendComponent implements OnChanges {
   pathD: string = '';
   areaD: string = '';
   yTicks: number[] = [];
+  points: Array<{ x: number; y: number }> = [];
+  labelPositions: Array<{ x: number; y: number }> = [];
+  gridLines: Array<{ y1: number; y2: number; labelY: number; value: number }> = [];
+  showLabel: boolean[] = [];
+  hoveredIndex: number | null = null;
 
-  readonly width = 600;
-  readonly height = 240;
-  readonly padding = { top: 16, right: 24, bottom: 28, left: 28 };
+  readonly width = 260;
+  readonly height = 140;
+  readonly padding = { top: 10, right: 10, bottom: 32, left: 18 };
+
+  ngOnInit(): void {
+    // Always initialize - even with empty data, we want to show the grid
+    this.computeData();
+    this.computePath();
+  }
 
   ngOnChanges(changes: SimpleChanges): void {
     if (changes['candidates']) {
@@ -40,8 +51,9 @@ export class RegistrationTrendComponent implements OnChanges {
       const d = new Date(today.getTime() - i * dayMs);
       const key = d.toISOString().slice(0, 10);
       buckets[key] = 0;
-      const label = `${(d.getMonth() + 1).toString().padStart(2, '0')}/${d.getDate().toString().padStart(2, '0')}`;
-      if (i % 7 === 0 || i === days - 1 || i === 0) this.labels.push(label); else this.labels.push('');
+      const label = `${d.getDate().toString().padStart(2, '0')}/${(d.getMonth() + 1).toString().padStart(2, '0')}`;
+      // Always store the label for hover, but mark which ones to show by default
+      this.labels.push(label);
     }
 
     this.candidates.forEach(c => {
@@ -58,21 +70,48 @@ export class RegistrationTrendComponent implements OnChanges {
     const w = this.width - this.padding.left - this.padding.right;
     const h = this.height - this.padding.top - this.padding.bottom;
     const stepX = w / (values.length - 1 || 1);
-    const points = values.map((v, i) => {
+    
+    // Calculate point positions
+    this.points = values.map((v, i) => {
       const x = this.padding.left + i * stepX;
       const y = this.padding.top + (1 - v / maxVal) * h;
       return { x, y };
     });
-    this.pathD = points.map((p, i) => (i === 0 ? `M ${p.x} ${p.y}` : `L ${p.x} ${p.y}`)).join(' ');
-    if (points.length > 0) {
-      const first = points[0];
-      const last = points[points.length - 1];
+    
+    // Calculate label positions
+    this.labelPositions = this.labels.map((_, i) => {
+      const x = this.padding.left + (this.width - this.padding.left - this.padding.right) / (values.length - 1 || 1) * i;
+      const y = this.height - 6;
+      return { x, y };
+    });
+    
+    // Determine which labels to show by default (first and last)
+    const lastIndex = values.length - 1;
+    this.showLabel = this.labels.map((_, i) => i === 0 || i === lastIndex);
+    
+    // Build path strings
+    this.pathD = this.points.map((p, i) => (i === 0 ? `M ${p.x} ${p.y}` : `L ${p.x} ${p.y}`)).join(' ');
+    if (this.points.length > 0) {
+      const first = this.points[0];
+      const last = this.points[this.points.length - 1];
       this.areaD = `${this.pathD} L ${last.x} ${this.padding.top + h} L ${first.x} ${this.padding.top + h} Z`;
     } else {
       this.areaD = '';
     }
+    
+    // Calculate Y ticks and grid lines
     const tickCount = 4;
     this.yTicks = Array.from({ length: tickCount + 1 }, (_, i) => Math.round((maxVal * i) / tickCount));
+    const maxTick = this.yTicks[this.yTicks.length - 1] || 1;
+    this.gridLines = this.yTicks.map(t => {
+      const y = this.padding.top + (1 - t / maxTick) * h;
+      return {
+        y1: y,
+        y2: y,
+        labelY: y + 4,
+        value: t
+      };
+    });
   }
 }
 

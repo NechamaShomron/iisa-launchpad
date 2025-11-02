@@ -1,18 +1,17 @@
 import { Component, OnInit, OnChanges, Input, Output, EventEmitter, ChangeDetectorRef } from '@angular/core';
 import { Router } from '@angular/router';
-import { CommonModule, Location, DatePipe } from '@angular/common';
+import { CommonModule } from '@angular/common';
 import { Candidate } from '../../../../models/candidate.model';
 import { CandidateService } from '../../../../services/candidate.service';
 import { MatCardModule } from '@angular/material/card';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
-import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 
 @Component({
   selector: 'app-candidate-detail',
   standalone: true,
-  imports: [CommonModule, MatCardModule, MatButtonModule, MatIconModule, MatDialogModule, MatProgressSpinnerModule],
+  imports: [CommonModule, MatCardModule, MatButtonModule, MatIconModule, MatProgressSpinnerModule],
   templateUrl: './candidate-detail.component.html',
   styleUrl: './candidate-detail.component.scss'
 })
@@ -27,9 +26,7 @@ export class CandidateDetailComponent implements OnInit, OnChanges {
 
   constructor(
     public candidateService: CandidateService,
-    public location: Location,
     private router: Router,
-    private dialog: MatDialog,
     private cdr: ChangeDetectorRef
   ) {}
 
@@ -125,10 +122,6 @@ export class CandidateDetailComponent implements OnInit, OnChanges {
     } else {
       this.isLoading = true;
     }
-  }
-
-  onGoBack(): void {
-    this.goBack.emit();
   }
 }
 

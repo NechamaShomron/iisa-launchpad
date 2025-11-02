@@ -18,11 +18,6 @@ export class CandidateService {
   private candidateAdded$ = new Subject<Candidate>();
   private candidateUpdated$ = new Subject<Candidate>();
   private candidateDeleted$ = new Subject<string>();
-  
-  // Public observables for components to subscribe
-  public onCandidateAdded$ = this.candidateAdded$.asObservable();
-  public onCandidateUpdated$ = this.candidateUpdated$.asObservable();
-  public onCandidateDeleted$ = this.candidateDeleted$.asObservable();
 
   constructor(private db: Database) {
     this.setupFirebaseListeners();
@@ -172,23 +167,6 @@ export class CandidateService {
     }
   }
 
-  searchCandidates(query: string): Candidate[] {
-    const lowerQuery = query.toLowerCase();
-    return this.candidatesSubject.value.filter(c =>
-      c.fullName.toLowerCase().includes(lowerQuery) ||
-      c.city.toLowerCase().includes(lowerQuery) ||
-      c.email.toLowerCase().includes(lowerQuery)
-    );
-  }
-
-  filterByAgeRange(min: number, max: number): Candidate[] {
-    return this.candidatesSubject.value.filter(c => c.age >= min && c.age <= max);
-  }
-
-  filterByCity(city: string): Candidate[] {
-    return this.candidatesSubject.value.filter(c => c.city.toLowerCase() === city.toLowerCase());
-  }
-
   getStats(): VisitStats {
     const totalVisits = this.visitsSubject.value;
     const totalRegistrations = this.candidatesSubject.value.length;
@@ -212,9 +190,7 @@ export class CandidateService {
       // Increment and save
       const newCount = (currentCount || 0) + 1;
       await set(visitsRef, newCount);
-      
-      console.log('Visit count incremented from', currentCount || 0, 'to', newCount);
-      
+            
       // The listener will automatically update visitsSubject, but force update to ensure UI updates
       this.visitsSubject.next(newCount);
     } catch (error) {

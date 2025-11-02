@@ -360,10 +360,6 @@ export class RegistrationFormComponent implements OnInit {
     });
   }
 
-  generateId(): string {
-    return 'candidate_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
-  }
-
   removeImage(): void {
     this.previewImage = undefined;
     this.registrationForm.patchValue({ profileImage: null });
