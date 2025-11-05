@@ -1,4 +1,4 @@
-import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
+import { Component, OnInit, OnDestroy, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { CandidateService } from '../../../../services/candidate.service';
@@ -18,6 +18,8 @@ import { MatInputModule } from '@angular/material/input';
 import { MatCardHeader } from '@angular/material/card';
 import { MatCardTitle } from '@angular/material/card';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { Subject } from 'rxjs';
+import { takeUntil } from 'rxjs/operators';
 
 @Component({
   selector: 'app-dashboard',
@@ -44,7 +46,7 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
   templateUrl: './dashboard.component.html',
   styleUrl: './dashboard.component.scss'
 })
-export class DashboardComponent implements OnInit {
+export class DashboardComponent implements OnInit, OnDestroy {
   candidates: Candidate[] = [];
   filteredCandidates: Candidate[] = [];
   stats: VisitStats = { totalVisits: 0, totalRegistrations: 0, conversionRate: 0 };
@@ -63,6 +65,9 @@ export class DashboardComponent implements OnInit {
     ageFilter: { min: 18, max: 100 }
   };
 
+  private destroy$ = new Subject<void>();
+  private filterTimer?: any;
+  
   constructor(
     private candidateService: CandidateService,
     private cdr: ChangeDetectorRef
@@ -73,18 +78,17 @@ export class DashboardComponent implements OnInit {
   }
 
   loadData(): void {
-    // Force loading state to show immediately
     this.isLoading = true;
-    this.cdr.detectChanges(); // Force change detection to show spinner
+    this.cdr.detectChanges();
     
     const loadingStartTime = Date.now();
     const minDisplayTime = 800; // Minimum 800ms to ensure spinner is visible
     
     let isFirstLoad = true;
-    
-    // Subscribe to candidates - use a small delay to ensure spinner renders first
     setTimeout(() => {
-      this.candidateService.getCandidates$().subscribe(candidates => {
+      this.candidateService.getCandidates$()
+        .pipe(takeUntil(this.destroy$))
+        .subscribe(candidates => {
         // Update dashboard data (common for both first load and updates)
         this.updateDashboardData(candidates);
         
@@ -100,15 +104,14 @@ export class DashboardComponent implements OnInit {
           
           isFirstLoad = false;
         }
-        // else: Subsequent updates don't trigger loading state (just updates data)
       });
-    }, 50); // Small delay to ensure spinner renders
+    }, 50);
 
-    // Subscribe to visits to update stats when visits change
-    this.candidateService.visits$.subscribe(() => {
+    this.candidateService.visits$
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(() => {
       if (!this.isLoading) {
         this.updateStats();
-        // RegVisitsDonutComponent updates automatically via @Input
       }
     });
   }
@@ -124,33 +127,19 @@ export class DashboardComponent implements OnInit {
   }
 
   filterCandidates(): void {
-    let filtered = [...this.candidates];
-
-    // Apply name filter
-    if (this.nameSearch) {
-      const lowerName = this.nameSearch.toLowerCase();
-      filtered = filtered.filter(c => c.fullName.toLowerCase().includes(lowerName));
-    }
-
-    // Apply email filter
-    if (this.emailSearch) {
-      const lowerEmail = this.emailSearch.toLowerCase();
-      filtered = filtered.filter(c => c.email.toLowerCase().includes(lowerEmail));
-    }
-
-    // Apply city/region filter
-    if (this.citySearch) {
-      const lowerCity = this.citySearch.toLowerCase();
-      filtered = filtered.filter(c => c.city.toLowerCase().includes(lowerCity));
-    }
-
-    // Apply age filter (treat empty max age as 100)
-    const maxAge = this.ageFilter.max || 100;
+    const nameQ = (this.nameSearch || '').trim().toLowerCase();
+    const emailQ = (this.emailSearch || '').trim().toLowerCase();
+    const cityQ = (this.citySearch || '').trim().toLowerCase();
     const minAge = this.ageFilter.min || 18;
+    const maxAge = this.ageFilter.max || 100;
 
-    filtered = filtered.filter(c => c.age >= minAge && c.age <= maxAge);
-
-    this.filteredCandidates = filtered;
+    this.filteredCandidates = this.candidates.filter(c => {
+      if (nameQ && !c.fullName.toLowerCase().includes(nameQ)) return false;
+      if (emailQ && !c.email.toLowerCase().includes(emailQ)) return false;
+      if (cityQ && !c.city.toLowerCase().includes(cityQ)) return false;
+      if (c.age < minAge || c.age > maxAge) return false;
+      return true;
+    });
   }
 
   onFilterChange(
@@ -168,35 +157,42 @@ export class DashboardComponent implements OnInit {
         this.citySearch = (rawValue ?? '').toString();
         break;
       case 'ageMin': {
-        const min = Number(rawValue);
-        this.ageFilter = { ...this.ageFilter, min: isNaN(min) ? 18 : min };
+        const min = this.coerceAge(rawValue, 18);
+        const max = this.coerceAge(this.ageFilter.max, 100);
+        this.ageFilter = { min: Math.min(min, max), max };
         break;
       }
       case 'ageMax': {
-        const max = Number(rawValue);
-        this.ageFilter = { ...this.ageFilter, max: isNaN(max) ? 100 : max };
+        const max = this.coerceAge(rawValue, 100);
+        const min = this.coerceAge(this.ageFilter.min, 18);
+        this.ageFilter = { min, max: Math.max(max, min) };
         break;
       }
     }
-    this.filterCandidates();
+    this.applyFiltersDebounced();
+  }
+
+  private coerceAge(value: any, fallback: number): number {
+    const n = Number(value);
+    if (isNaN(n)) return fallback;
+    return Math.max(18, Math.min(100, Math.floor(n)));
+  }
+
+
+  private applyFiltersDebounced(delay: number = 120): void {
+    clearTimeout(this.filterTimer);
+    this.filterTimer = setTimeout(() => this.filterCandidates(), delay);
   }
 
   handleCandidateDeleted(): void {
     this.selectedCandidate = undefined;
-    // Restore filters when going back to list
     this.restoreFilters();
-    
-    // Scroll to top when deleting candidate
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
   onCandidateSelected(candidate: Candidate): void {
-    // Save current filter state before clearing
     this.saveFilterState();
-    // Don't clear filters - just select the candidate
     this.selectedCandidate = candidate;
-    
-    // Scroll to top smoothly when opening candidate detail
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }
   
@@ -220,9 +216,16 @@ export class DashboardComponent implements OnInit {
   goBackToList(): void {
     this.selectedCandidate = undefined;
     this.restoreFilters();
-    
-    // Scroll to top when going back to list
     window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
+    if (this.filterTimer) {
+      clearTimeout(this.filterTimer);
+      this.filterTimer = undefined;
+    }
   }
 }
 

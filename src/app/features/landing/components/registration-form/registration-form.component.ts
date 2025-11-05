@@ -1,4 +1,4 @@
-import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
+import { Component, OnInit, OnDestroy, ChangeDetectorRef } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule, AbstractControl, ValidationErrors } from '@angular/forms';
 import { CandidateService } from '../../../../services/candidate.service';
@@ -14,6 +14,8 @@ import { MatAutocompleteModule } from '@angular/material/autocomplete';
 import { MatOptionModule } from '@angular/material/core';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { Router } from '@angular/router';
+import { Subject } from 'rxjs';
+import { takeUntil } from 'rxjs/operators';
 import { CITIES, REGIONS } from '../../../../shared/constants/locations';
 
 @Component({
@@ -35,7 +37,7 @@ import { CITIES, REGIONS } from '../../../../shared/constants/locations';
   templateUrl: './registration-form.component.html',
   styleUrl: './registration-form.component.scss'
 })
-export class RegistrationFormComponent implements OnInit {
+export class RegistrationFormComponent implements OnInit, OnDestroy {
   registrationForm: FormGroup;
   previewImage?: string;
   editingCandidate?: Candidate;
@@ -47,6 +49,8 @@ export class RegistrationFormComponent implements OnInit {
 
   filteredCities: string[] = [];
   filteredRegions: string[] = [];
+
+  private destroy$ = new Subject<void>();
 
   private isValidLocation(value: string | null | undefined): boolean {
     if (!value) return false;
@@ -93,7 +97,9 @@ export class RegistrationFormComponent implements OnInit {
     const cityCtrl = this.registrationForm.get('city');
     this.filteredCities = [...this.cities];
     this.filteredRegions = [...this.regions];
-    cityCtrl?.valueChanges.subscribe((val: string) => {
+    cityCtrl?.valueChanges
+      .pipe(takeUntil(this.destroy$))
+      .subscribe((val: string) => {
       const q = (val || '').toLowerCase().trim();
       this.filteredCities = this.cities.filter(c => c.toLowerCase().includes(q));
       this.filteredRegions = this.regions.filter(r => r.toLowerCase().includes(q));
@@ -121,7 +127,9 @@ export class RegistrationFormComponent implements OnInit {
     
     // Small delay to ensure spinner renders first
     setTimeout(() => {
-      this.candidateService.getCandidates$().subscribe(candidates => {
+      this.candidateService.getCandidates$()
+        .pipe(takeUntil(this.destroy$))
+        .subscribe(candidates => {
         if (isFirstLoad) {
           if (candidates.length > 0 || this.editingCandidate) {
             this.checkIfEditing();
@@ -145,6 +153,11 @@ export class RegistrationFormComponent implements OnInit {
         }
       });
     }, 50); // Small delay to ensure spinner renders
+  }
+
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
   }
 
   checkIfEditing(): void {
