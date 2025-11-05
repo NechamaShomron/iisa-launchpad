@@ -14,6 +14,7 @@ import { MatAutocompleteModule } from '@angular/material/autocomplete';
 import { MatOptionModule } from '@angular/material/core';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { Router } from '@angular/router';
+import { CITIES, REGIONS } from '../../../../shared/constants/locations';
 
 @Component({
   selector: 'app-registration-form',
@@ -41,17 +42,8 @@ export class RegistrationFormComponent implements OnInit {
   isLoading: boolean = true;
   
   // Location lists
-  cities: string[] = [
-    'Tel Aviv', 'Jerusalem', 'Haifa', 'Beer Sheva', 'Netanya', 'Ashkelon', 'Rehovot', 'Rishon LeZion',
-    'Petah Tikva', 'Ashdod', 'Ramat Gan', 'Bnei Brak', 'Herzliya', 'Modiin', 'Kfar Saba', 'Ramat Hasharon',
-    'Bat Yam', 'Holon', 'Givatayim', 'Or Yehuda', 'Givat Shmuel', 'Ra\'anana', 'Hadera', 'Lod', 'Nazareth',
-    'Herzliya', 'Eilat', 'Tiberias', 'Kiryat Shmona', 'Safed', 'Afula', 'Karmiel', 'Nahariya', 'Beit Shemesh',
-    'Kiryat Gat', 'Kiryat Ata', 'Umm al-Fahm', 'Sderot', 'Yavne', 'Rosh HaAyin'
-  ].sort();
-  regions: string[] = [
-    'Northern District', 'Haifa District', 'Central District', 'Tel Aviv District',
-    'Jerusalem District', 'Southern District', 'Judea and Samaria Area'
-  ];
+  cities: string[] = [...CITIES].sort();
+  regions: string[] = [...REGIONS];
 
   filteredCities: string[] = [];
   filteredRegions: string[] = [];
@@ -252,105 +244,98 @@ export class RegistrationFormComponent implements OnInit {
   }
 
   async onSubmit(): Promise<void> {
-    if (this.registrationForm.valid) {
-      const formValue = this.registrationForm.value;
-      
-      try {
-        if (this.editingCandidate) {
-          // Verify candidate still exists before updating (handles concurrent deletion)
-          const currentCandidate = this.candidateService.getCandidateById(this.editingCandidate.id);
-          if (!currentCandidate) {
-            this.snackBar.open('This candidate no longer exists. It may have been deleted.', 'Close', {
-              duration: 5000,
-              panelClass: ['error-snackbar']
-            });
-            sessionStorage.removeItem('editCandidateId');
-            setTimeout(() => {
-              this.router.navigate(['/dashboard']);
-            }, 1500);
-            return;
-          }
-          
-          // Verify registration date hasn't changed (prevents editing old registrations that became ineligible)
-          const registrationDate = new Date(currentCandidate.registrationDate);
-          const today = new Date();
-          const daysDiff = Math.floor((today.getTime() - registrationDate.getTime()) / (1000 * 60 * 60 * 24));
-          
-          if (daysDiff >= 3) {
-            this.snackBar.open('This registration is too old to edit.', 'Close', {
-              duration: 5000,
-              panelClass: ['error-snackbar']
-            });
-            localStorage.removeItem('editCandidateId');
-            setTimeout(() => {
-              this.router.navigate(['/dashboard']);
-            }, 1500);
-            return;
-          }
-          
-          // Update existing candidate
-          const candidate: Candidate = {
-            id: this.editingCandidate.id,
-            fullName: formValue.fullName,
-            email: formValue.email,
-            phone: formValue.phone,
-            age: formValue.age,
-            city: formValue.city,
-            hobbies: formValue.hobbies,
-            whyPerfect: formValue.whyPerfect,
-            profileImage: formValue.profileImage,
-            registrationDate: this.editingCandidate.registrationDate,
-            lastUpdated: new Date()
-          };
-          await this.candidateService.updateCandidate(candidate);
-          this.snackBar.open('Registration updated successfully!', 'Close', {
-            duration: 3000,
-            panelClass: ['success-snackbar']
-          });
-          sessionStorage.removeItem('editCandidateId');
-        } else {
-          // Clear any existing edit state to prevent conflicts
-          sessionStorage.removeItem('editCandidateId');
-          
-          // Add new candidate (no ID - Firebase will generate it)
-          const candidate: Candidate = {
-            id: '', // Empty ID - Firebase will generate one
-            fullName: formValue.fullName,
-            email: formValue.email,
-            phone: formValue.phone,
-            age: formValue.age,
-            city: formValue.city,
-            hobbies: formValue.hobbies,
-            whyPerfect: formValue.whyPerfect,
-            profileImage: formValue.profileImage,
-            registrationDate: new Date(),
-            lastUpdated: new Date()
-          };
-          await this.candidateService.addCandidate(candidate);
-          this.snackBar.open('Registration submitted successfully!', 'Close', {
-            duration: 3000,
-            panelClass: ['success-snackbar']
-          });
-        }
-
-        // Redirect to dashboard
-        setTimeout(() => {
-          this.router.navigate(['/dashboard']);
-        }, 1500);
-      } catch (error) {
-        console.error('Error saving candidate:', error);
-        this.snackBar.open('Error saving registration. Please try again.', 'Close', {
-          duration: 3000,
-          panelClass: ['error-snackbar']
-        });
-      }
-    } else {
+    if (!this.registrationForm.valid) {
       this.markFormGroupTouched();
-      this.snackBar.open('Please fill in all required fields correctly', 'Close', {
-        duration: 3000,
-        panelClass: ['error-snackbar']
-      });
+      this.showSnack('Please fill in all required fields correctly', 'error-snackbar', 3000);
+      return;
     }
+
+    try {
+      if (this.editingCandidate) {
+        await this.handleEditSubmit();
+      } else {
+        await this.handleCreateSubmit();
+      }
+      this.navigateToDashboard();
+    } catch (error) {
+      console.error('Error saving candidate:', error);
+      this.showSnack('Error saving registration. Please try again.', 'error-snackbar', 3000);
+    }
+  }
+
+  private async handleEditSubmit(): Promise<void> {
+    if (!this.editingCandidate) return;
+
+    const currentCandidate = this.candidateService.getCandidateById(this.editingCandidate.id);
+    if (!currentCandidate) {
+      this.clearEditState();
+      this.showSnack('This candidate no longer exists. It may have been deleted.', 'error-snackbar', 5000);
+      return;
+    }
+
+    if (!this.isEditable(currentCandidate.registrationDate)) {
+      this.clearEditState();
+      this.showSnack('This registration is too old to edit.', 'error-snackbar', 5000);
+      return;
+    }
+
+    const form = this.registrationForm.value;
+    const candidate: Candidate = {
+      id: this.editingCandidate.id,
+      fullName: form.fullName,
+      email: form.email,
+      phone: form.phone,
+      age: form.age,
+      city: form.city,
+      hobbies: form.hobbies,
+      whyPerfect: form.whyPerfect,
+      profileImage: form.profileImage,
+      registrationDate: this.editingCandidate.registrationDate,
+      lastUpdated: new Date()
+    };
+    await this.candidateService.updateCandidate(candidate);
+    this.clearEditState();
+    this.showSnack('Registration updated successfully!', 'success-snackbar', 3000);
+  }
+
+  private async handleCreateSubmit(): Promise<void> {
+    this.clearEditState();
+    const form = this.registrationForm.value;
+    const candidate: Candidate = {
+      id: '',
+      fullName: form.fullName,
+      email: form.email,
+      phone: form.phone,
+      age: form.age,
+      city: form.city,
+      hobbies: form.hobbies,
+      whyPerfect: form.whyPerfect,
+      profileImage: form.profileImage,
+      registrationDate: new Date(),
+      lastUpdated: new Date()
+    };
+    await this.candidateService.addCandidate(candidate);
+    this.showSnack('Registration submitted successfully!', 'success-snackbar', 3000);
+  }
+
+  private isEditable(registrationDate: Date | string): boolean {
+    const date = new Date(registrationDate);
+    const today = new Date();
+    const daysDiff = Math.floor((today.getTime() - date.getTime()) / (1000 * 60 * 60 * 24));
+    return daysDiff < 3;
+  }
+
+  private navigateToDashboard(): void {
+    setTimeout(() => this.router.navigate(['/dashboard']), 1500);
+  }
+
+  private clearEditState(): void {
+    sessionStorage.removeItem('editCandidateId');
+    localStorage.removeItem('editCandidateId');
+  }
+
+  private showSnack(message: string, panel: 'success-snackbar' | 'error-snackbar', duration: number): void {
+    this.snackBar.open(message, 'Close', { duration, panelClass: [panel] });
   }
 
   markFormGroupTouched(): void {

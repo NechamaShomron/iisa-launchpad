@@ -1,6 +1,6 @@
 import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { Router, RouterModule } from '@angular/router';
+import { RouterModule } from '@angular/router';
 import { CandidateService } from '../../../../services/candidate.service';
 import { Candidate, VisitStats } from '../../../../models/candidate.model';
 import { MatCardModule } from '@angular/material/card';
@@ -65,7 +65,6 @@ export class DashboardComponent implements OnInit {
 
   constructor(
     private candidateService: CandidateService,
-    private router: Router,
     private cdr: ChangeDetectorRef
   ) {}
 
@@ -147,28 +146,38 @@ export class DashboardComponent implements OnInit {
 
     // Apply age filter (treat empty max age as 100)
     const maxAge = this.ageFilter.max || 100;
-    filtered = filtered.filter(c => c.age >= this.ageFilter.min && c.age <= maxAge);
+    const minAge = this.ageFilter.min || 18;
+
+    filtered = filtered.filter(c => c.age >= minAge && c.age <= maxAge);
 
     this.filteredCandidates = filtered;
   }
 
-  onNameSearchChange(value: string): void {
-    // nameSearch is already updated via [(ngModel)], just filter
-    this.filterCandidates();
-  }
-
-  onEmailSearchChange(value: string): void {
-    // emailSearch is already updated via [(ngModel)], just filter
-    this.filterCandidates();
-  }
-
-  onCitySearchChange(value: string): void {
-    // citySearch is already updated via [(ngModel)], just filter
-    this.filterCandidates();
-  }
-
-  onAgeFilterChange(min: number, max: number): void {
-    this.ageFilter = { min, max };
+  onFilterChange(
+    key: 'name' | 'email' | 'city' | 'ageMin' | 'ageMax',
+    rawValue: any
+  ): void {
+    switch (key) {
+      case 'name':
+        this.nameSearch = (rawValue ?? '').toString();
+        break;
+      case 'email':
+        this.emailSearch = (rawValue ?? '').toString();
+        break;
+      case 'city':
+        this.citySearch = (rawValue ?? '').toString();
+        break;
+      case 'ageMin': {
+        const min = Number(rawValue);
+        this.ageFilter = { ...this.ageFilter, min: isNaN(min) ? 18 : min };
+        break;
+      }
+      case 'ageMax': {
+        const max = Number(rawValue);
+        this.ageFilter = { ...this.ageFilter, max: isNaN(max) ? 100 : max };
+        break;
+      }
+    }
     this.filterCandidates();
   }
 

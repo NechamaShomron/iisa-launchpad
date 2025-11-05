@@ -95,7 +95,7 @@
                       matInput 
                       placeholder="Search by name"
                       [(ngModel)]="nameSearch"
-                      (ngModelChange)="onNameSearchChange($event)"
+                      (ngModelChange)="onFilterChange('name', $event)"
                       class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm">
                   </div>
                   
@@ -107,7 +107,7 @@
                       type="email"
                       placeholder="Search by email"
                       [(ngModel)]="emailSearch"
-                      (ngModelChange)="onEmailSearchChange($event)"
+                      (ngModelChange)="onFilterChange('email', $event)"
                       class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm">
     </div>
 
@@ -118,7 +118,7 @@
             matInput 
                       placeholder="Search by city"
                       [(ngModel)]="citySearch"
-                      (ngModelChange)="onCitySearchChange($event)"
+                      (ngModelChange)="onFilterChange('city', $event)"
                       class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm">
                   </div>
                   
@@ -130,7 +130,7 @@
             type="number" 
                       placeholder="Min"
             [(ngModel)]="ageFilter.min"
-            (ngModelChange)="onAgeFilterChange(ageFilter.min, ageFilter.max)"
+            (ngModelChange)="onFilterChange('ageMin', ageFilter.min)"
                       class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm">
                   </div>
           
@@ -142,7 +142,7 @@
             type="number" 
                       placeholder="Max"
             [(ngModel)]="ageFilter.max"
-            (ngModelChange)="onAgeFilterChange(ageFilter.min, ageFilter.max)"
+            (ngModelChange)="onFilterChange('ageMax', ageFilter.max)"
                       class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm">
                   </div>
         </div>

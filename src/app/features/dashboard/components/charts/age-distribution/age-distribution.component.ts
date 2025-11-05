@@ -1,6 +1,7 @@
 import { Component, Input, OnInit, HostListener, OnChanges, SimpleChanges } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Candidate } from '../../../../../models/candidate.model';
+import { AGE_BUCKETS, AGE_COLORS } from '../../../../../shared/constants/charts';
 
 @Component({
   selector: 'app-age-distribution',
@@ -12,11 +13,16 @@ import { Candidate } from '../../../../../models/candidate.model';
 export class AgeDistributionComponent implements OnInit, OnChanges {
   @Input() candidates: Candidate[] = [];
 
-  ageColors: string[] = ['#818cf8','#a78bfa','#c4b5fd','#f472b6','#fb7185','#fda4af','#93c5fd','#60a5fa'];
+  ageColors: string[] = AGE_COLORS;
 
   ageBarWidth = 320;
   ageBarHeight = 180;
-  ageBarPadding = { top: 12, right: 12, bottom: 64, left: 24 } as any;
+  ageBarPadding: { top: number; right: number; bottom: number; left: number } = {
+    top: 12,
+    right: 12,
+    bottom: 64,
+    left: 24
+  };
   ageBars: Array<{ x: number; y: number; width: number; height: number; label: string; value: number }> = [];
   xLabelOffset = 0;
 
@@ -38,42 +44,33 @@ export class AgeDistributionComponent implements OnInit, OnChanges {
   }
 
   private getAgeDistribution(): { age: string; count: number }[] {
-    const order = ['18–24','25–34','35–44','45–54','55–64','65–74','75–84','85–100'];
-    const distribution: { [key: string]: number } = {};
-    order.forEach(bucket => distribution[bucket] = 0);
-    this.candidates.forEach(c => {
-      const age = c.age;
-      let bucket = '85–100';
-      if (age <= 24) bucket = '18–24';
-      else if (age <= 34) bucket = '25–34';
-      else if (age <= 44) bucket = '35–44';
-      else if (age <= 54) bucket = '45–54';
-      else if (age <= 64) bucket = '55–64';
-      else if (age <= 74) bucket = '65–74';
-      else if (age <= 84) bucket = '75–84';
-      distribution[bucket] = (distribution[bucket] || 0) + 1;
-    });
-    return order.map(age => ({ age, count: distribution[age] || 0 }));
+    const distribution: Record<string, number> = Object.fromEntries(
+      AGE_BUCKETS.map(b => [b.label, 0])
+    );
+    for (const c of this.candidates) {
+      for (const b of AGE_BUCKETS) {
+        if (c.age >= b.min && c.age <= b.max) {
+          distribution[b.label] = (distribution[b.label] || 0) + 1;
+          break;
+        }
+      }
+    }
+    return AGE_BUCKETS.map(b => ({ age: b.label, count: distribution[b.label] || 0 }));
   }
 
   private updateAgeBars(): void {
-    const dist = this.getAgeDistribution();
-    const labels = dist.map(d => d.age);
-    const values = dist.map(d => d.count);
-    const maxVal = Math.max(1, ...values);
+    const distribution = this.getAgeDistribution();
+    const labels = distribution.map(d => d.age);
+    const values = distribution.map(d => d.count);
+    const maxValue = Math.max(1, ...values);
 
-    const w = this.ageBarWidth - this.ageBarPadding.left - this.ageBarPadding.right;
-    const h = this.ageBarHeight - this.ageBarPadding.top - this.ageBarPadding.bottom;
-    const n = values.length || 1;
-    const step = w / n;
-    const gap = Math.min(20, step * 0.35);
-    const barW = Math.max(6, step - gap);
+    const { innerWidth, innerHeight, step, barWidth } = this.computeLayout(values.length);
 
-    this.ageBars = values.map((v, i) => {
-      const x = this.ageBarPadding.left + i * step + (step - barW) / 2;
-      const barH = (v / maxVal) * h;
-      const y = this.ageBarPadding.top + (h - barH);
-      return { x, y, width: barW, height: barH, label: labels[i], value: v };
+    this.ageBars = values.map((value, index) => {
+      const x = this.ageBarPadding.left + index * step + (step - barWidth) / 2;
+      const barHeight = (value / maxValue) * innerHeight;
+      const y = this.ageBarPadding.top + (innerHeight - barHeight);
+      return { x, y, width: barWidth, height: barHeight, label: labels[index], value };
     });
   }
 
@@ -82,19 +79,34 @@ export class AgeDistributionComponent implements OnInit, OnChanges {
     if (vw < 640) {
       this.ageBarWidth = 240;
       this.ageBarHeight = 160;
-      this.ageBarPadding = { top: 20, right: 12, bottom: 66, left: 24 } as any;
+      this.ageBarPadding = { top: 20, right: 12, bottom: 66, left: 24 };
       this.xLabelOffset = 10;
     } else if (vw < 1024) {
       this.ageBarWidth = 280;
       this.ageBarHeight = 170;
-      this.ageBarPadding = { top: 16, right: 12, bottom: 66, left: 22 } as any;
+      this.ageBarPadding = { top: 16, right: 12, bottom: 66, left: 22 };
       this.xLabelOffset = 4;
     } else {
       this.ageBarWidth = 320;
       this.ageBarHeight = 180;
-      this.ageBarPadding = { top: 12, right: 12, bottom: 70, left: 24 } as any;
+      this.ageBarPadding = { top: 12, right: 12, bottom: 70, left: 24 };
       this.xLabelOffset = 0;
     }
+  }
+
+  private computeLayout(barCount: number): {
+    innerWidth: number;
+    innerHeight: number;
+    step: number;
+    barWidth: number;
+  } {
+    const innerWidth = this.ageBarWidth - this.ageBarPadding.left - this.ageBarPadding.right;
+    const innerHeight = this.ageBarHeight - this.ageBarPadding.top - this.ageBarPadding.bottom;
+    const count = Math.max(1, barCount);
+    const step = innerWidth / count;
+    const gap = Math.min(20, step * 0.35);
+    const barWidth = Math.max(6, step - gap);
+    return { innerWidth, innerHeight, step, barWidth };
   }
 }
 
